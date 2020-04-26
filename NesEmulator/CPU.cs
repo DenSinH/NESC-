@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 
 using Newtonsoft.Json;
 using NLog;
@@ -8,6 +9,24 @@ using NLog;
 
 namespace NesEmulator
 {
+
+    class InstructionCaller
+    {
+        private Func<string, int> method;
+        public string mode;
+
+        public InstructionCaller(Func<string, int> method, string mode)
+        {
+            this.method = method;
+            this.mode = mode;
+        }
+
+        public int call()
+        {
+            return this.method(this.mode);
+        }
+
+    }
 
     partial class CPU
     {
@@ -22,8 +41,7 @@ namespace NesEmulator
         private PureByte oper;
         private byte pageChange;
 
-        private Dictionary<string, string> opcodes;
-        private Dictionary<string, string> illegalOpcodes;
+        private InstructionCaller[] instructions;
 
         public CPU()
         {
@@ -33,11 +51,95 @@ namespace NesEmulator
 
             // load opcodes
 
-            string opcodeJson = File.ReadAllText("../../data/opcodes.json");
-            this.opcodes = JsonConvert.DeserializeObject<Dictionary<string, string>>(opcodeJson);
+            string opcodeJson = File.ReadAllText("../../data/AllOpcodes.json");
+            Dictionary<string, string>  opcodes = JsonConvert.DeserializeObject<Dictionary<string, string>>(opcodeJson);
 
-            string illegalOpcodeJson = File.ReadAllText("../../data/illegal_opcodes.json");
-            this.illegalOpcodes = JsonConvert.DeserializeObject<Dictionary<string, string>>(illegalOpcodeJson);
+            this.instructions = new InstructionCaller[0x100];
+
+            foreach (KeyValuePair<string, string> entry in opcodes)
+            {
+                string[] instructionString = entry.Value.Split(' ');
+                Func<string, int> instruction;
+
+                switch (instructionString[0])
+                {
+                    case "ADC": instruction = this.ADC; break;
+                    case "ALR": instruction = this.ALR; break;
+                    case "AND": instruction = this.AND; break;
+                    case "ARR": instruction = this.ARR; break;
+                    case "ASL": instruction = this.ASL; break;
+                    case "BCC": instruction = this.BCC; break;
+                    case "BCS": instruction = this.BCS; break;
+                    case "BEQ": instruction = this.BEQ; break;
+                    case "BIT": instruction = this.BIT; break;
+                    case "BMI": instruction = this.BMI; break;
+                    case "BNE": instruction = this.BNE; break;
+                    case "BPL": instruction = this.BPL; break;
+                    case "BRK": instruction = this.BRK; break;
+                    case "BVC": instruction = this.BVC; break;
+                    case "BVS": instruction = this.BVS; break;
+                    case "CLC": instruction = this.CLC; break;
+                    case "CLD": instruction = this.CLD; break;
+                    case "CLI": instruction = this.CLI; break;
+                    case "CLV": instruction = this.CLV; break;
+                    case "CMP": instruction = this.CMP; break;
+                    case "CPX": instruction = this.CPX; break;
+                    case "CPY": instruction = this.CPY; break;
+                    case "DCP": instruction = this.DCP; break;
+                    case "DEC": instruction = this.DEC; break;
+                    case "DEX": instruction = this.DEX; break;
+                    case "DEY": instruction = this.DEY; break;
+                    case "EOR": instruction = this.EOR; break;
+                    case "INC": instruction = this.INC; break;
+                    case "INX": instruction = this.INX; break;
+                    case "INY": instruction = this.INY; break;
+                    case "ISC": instruction = this.ISC; break;
+                    case "LAX": instruction = this.LAX; break;
+                    case "LDA": instruction = this.LDA; break;
+                    case "LDX": instruction = this.LDX; break;
+                    case "LDY": instruction = this.LDY; break;
+                    case "LSR": instruction = this.LSR; break;
+                    case "NOP": instruction = this.NOP; break;
+                    case "ORA": instruction = this.ORA; break;
+                    case "PHA": instruction = this.PHA; break;
+                    case "PHP": instruction = this.PHP; break;
+                    case "PLA": instruction = this.PLA; break;
+                    case "PLP": instruction = this.PLP; break;
+                    case "RLA": instruction = this.RLA; break;
+                    case "ROL": instruction = this.ROL; break;
+                    case "ROR": instruction = this.ROR; break;
+                    case "RRA": instruction = this.RRA; break;
+                    case "RTI": instruction = this.RTI; break;
+                    case "RTS": instruction = this.RTS; break;
+                    case "SAX": instruction = this.SAX; break;
+                    case "SBC": instruction = this.SBC; break;
+                    case "SEC": instruction = this.SEC; break;
+                    case "SED": instruction = this.SED; break;
+                    case "SEI": instruction = this.SEI; break;
+                    case "SLO": instruction = this.SLO; break;
+                    case "SRE": instruction = this.SRE; break;
+                    case "STA": instruction = this.STA; break;
+                    case "STX": instruction = this.STX; break;
+                    case "STY": instruction = this.STY; break;
+                    case "TAX": instruction = this.TAX; break;
+                    case "TAY": instruction = this.TAY; break;
+                    case "TSX": instruction = this.TSX; break;
+                    case "TXA": instruction = this.TXA; break;
+                    case "TXS": instruction = this.TXS; break;
+                    case "TYA": instruction = this.TYA; break;
+                    case "XAA": instruction = this.XAA; break;
+                    case "JSR":
+                    case "JMP":
+                        instruction = null; break;
+                    default: throw new Exception("Unknown instruction: " + instructionString[0]);
+                }
+
+                if (instruction != null)
+                {
+                    this.instructions[int.Parse(entry.Key, NumberStyles.HexNumber)] = new InstructionCaller(instruction, instructionString[1]);
+                }
+            }
+            
         }
 
         private void log(string message)
@@ -106,25 +208,8 @@ namespace NesEmulator
 
         public int step()
         {
-            string opcode = this.mem.getCurrent().hex();
+            int opcode = this.mem.getCurrent().unsigned();
             this.mem.incrPc();
-
-            string[] instructionString;
-
-            if (this.opcodes.ContainsKey(opcode))
-            {
-                instructionString = this.opcodes[opcode].Split(' ');
-            } else if (this.illegalOpcodes.ContainsKey(opcode))
-            {
-                instructionString = this.illegalOpcodes[opcode].Split(' ');
-            } else
-            {
-                this.kil = true;
-                return 0;
-            }
-
-            string instruction = instructionString[0];
-            string mode = instructionString[1];
 
             if (makeLog)
             {
@@ -133,8 +218,8 @@ namespace NesEmulator
                         "    {0}  {1} {2}: {3,5}\t\t{4}     A:{5} X:{6} Y:{7} P:{8} SP:{9}        CYC:{10}",
                         (this.mem.getPc() - 1).ToString("x2"),
                         opcode,
-                        instruction,
-                        mode,
+                        "INSTRUCTION", // instruction,
+                        "MODE", // mode,
                         this.mem.getCurrent().unsigned().ToString("x2"),
                         this.mem.ac.hex(),
                         this.mem.x.hex(),
@@ -151,7 +236,7 @@ namespace NesEmulator
             * as we need to operate on 2 bytes instead of a memory address
             */
 
-            if (instruction.Equals("JMP"))
+            if (opcode == 0x4c || opcode == 0x6c)
             {
                 /*
                 JMP  Jump to New Location
@@ -167,14 +252,14 @@ namespace NesEmulator
                 PureByte hh = this.mem.getCurrent();
                 this.mem.incrPc();
 
-                switch (mode)
+                switch (opcode)
                 {
-                    case "abs":
+                    case 0x4c:
                         {
                             this.mem.setPc(ll, hh);
                             return 3;
                         }
-                    case "ind":
+                    case 0x6c:
                         {
                             // indirect wraps around with the lower byte. This is a glitch/feature in the MOS6502 processor
                             this.mem.setPc(
@@ -183,10 +268,10 @@ namespace NesEmulator
                             );
                             return 5;
                         }
-                    default: throw new Exception("Unknown mode for JMP: " + mode);
+                    default: break;
                 }
             }
-            else if (instruction.Equals("JSR"))
+            else if (opcode == 0x20)
             {
                 /*
                 JSR  Jump to New Location Saving Return Address
@@ -205,98 +290,26 @@ namespace NesEmulator
                 this.mem.incrPc();
                 PureByte hh = this.mem.getCurrent();
                 this.mem.setPc(ll, hh);
-
-                if (!mode.Equals("abs"))
-                {
-                    throw new Exception("Unknown mode for JSR: " + mode);
-                }
                 return 6;
             }
 
-            this.getOper(mode);
+            InstructionCaller ic = this.instructions[opcode];
+            if (ic == null)
+            {
+                // Unknown opcodes is interpreted as KIL instruction
+                this.kil = true;
+                return 0;
+            }
+            this.getOper(ic.mode);
 
             if (this.oper.shared)
             {
                 lock (this.oper)
                 {
-                    return this.execute(instruction, mode);
+                    return ic.call();
                 }
             }
-            return this.execute(instruction, mode);
-            
-        }
-
-        private int execute(string instruction, string mode)
-        {
-            switch (instruction)
-            {
-                case "ADC": return this.ADC(mode);
-                case "ALR": return this.ALR(mode);
-                case "AND": return this.AND(mode);
-                case "ARR": return this.ARR(mode);
-                case "ASL": return this.ASL(mode);
-                case "BCC": return this.BCC(mode);
-                case "BCS": return this.BCS(mode);
-                case "BEQ": return this.BEQ(mode);
-                case "BIT": return this.BIT(mode);
-                case "BMI": return this.BMI(mode);
-                case "BNE": return this.BNE(mode);
-                case "BPL": return this.BPL(mode);
-                case "BRK": return this.BRK(mode);
-                case "BVC": return this.BVC(mode);
-                case "BVS": return this.BVS(mode);
-                case "CLC": return this.CLC(mode);
-                case "CLD": return this.CLD(mode);
-                case "CLI": return this.CLI(mode);
-                case "CLV": return this.CLV(mode);
-                case "CMP": return this.CMP(mode);
-                case "CPX": return this.CPX(mode);
-                case "CPY": return this.CPY(mode);
-                case "DCP": return this.DCP(mode);
-                case "DEC": return this.DEC(mode);
-                case "DEX": return this.DEX(mode);
-                case "DEY": return this.DEY(mode);
-                case "EOR": return this.EOR(mode);
-                case "INC": return this.INC(mode);
-                case "INX": return this.INX(mode);
-                case "INY": return this.INY(mode);
-                case "ISC": return this.ISC(mode);
-                case "LAX": return this.LAX(mode);
-                case "LDA": return this.LDA(mode);
-                case "LDX": return this.LDX(mode);
-                case "LDY": return this.LDY(mode);
-                case "LSR": return this.LSR(mode);
-                case "NOP": return this.NOP(mode);
-                case "ORA": return this.ORA(mode);
-                case "PHA": return this.PHA(mode);
-                case "PHP": return this.PHP(mode);
-                case "PLA": return this.PLA(mode);
-                case "PLP": return this.PLP(mode);
-                case "RLA": return this.RLA(mode);
-                case "ROL": return this.ROL(mode);
-                case "ROR": return this.ROR(mode);
-                case "RRA": return this.RRA(mode);
-                case "RTI": return this.RTI(mode);
-                case "RTS": return this.RTS(mode);
-                case "SAX": return this.SAX(mode);
-                case "SBC": return this.SBC(mode);
-                case "SEC": return this.SEC(mode);
-                case "SED": return this.SED(mode);
-                case "SEI": return this.SEI(mode);
-                case "SLO": return this.SLO(mode);
-                case "SRE": return this.SRE(mode);
-                case "STA": return this.STA(mode);
-                case "STX": return this.STX(mode);
-                case "STY": return this.STY(mode);
-                case "TAX": return this.TAX(mode);
-                case "TAY": return this.TAY(mode);
-                case "TSX": return this.TSX(mode);
-                case "TXA": return this.TXA(mode);
-                case "TXS": return this.TXS(mode);
-                case "TYA": return this.TYA(mode);
-                case "XAA": return this.XAA(mode);
-                default: throw new Exception("Unknown instruction: " + mode);
-            }
+            return ic.call();
         }
 
         private void getOper(string mode)
