@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CPU.instructions.cs" />
     <Compile Include="PureByte.cs" />
     <Compile Include="CPU.cs" />
     <Compile Include="CPUMEM.cs" />
