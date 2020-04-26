@@ -65,11 +65,24 @@ namespace NesEmulator
                 }
             }
             this.log(filename + " loaded");
+            this.RESET();
         }
 
         public void Load(string filename)
         {
             this.Load(filename, 0);
+        }
+
+        public void RESET()
+        {
+            this.mem.push(this.mem.get(0x100));
+            this.mem.push(this.mem.get(0x1ff));
+            this.mem.push(this.mem.get(0x1fe));
+            this.mem.setPc(
+                this.mem.get(this.mem.resetVector[0]),
+                this.mem.get(this.mem.resetVector[1])
+                );
+            this.cycle = 7;
         }
 
         public int GetCycle()
@@ -96,24 +109,22 @@ namespace NesEmulator
             string opcode = this.mem.getCurrent().hex();
             this.mem.incrPc();
 
-            string instructionString;
-            try
+            string[] instructionString;
+
+            if (this.opcodes.ContainsKey(opcode))
             {
-                instructionString = this.opcodes[opcode];
-            } catch (KeyNotFoundException)
+                instructionString = this.opcodes[opcode].Split(' ');
+            } else if (this.illegalOpcodes.ContainsKey(opcode))
             {
-                try
-                {
-                    instructionString = this.illegalOpcodes[opcode];
-                } catch (KeyNotFoundException)
-                {
-                    this.kil = true;
-                    return 0;
-                }
+                instructionString = this.illegalOpcodes[opcode].Split(' ');
+            } else
+            {
+                this.kil = true;
+                return 0;
             }
 
-            string instruction = instructionString.Split(' ')[0];
-            string mode = instructionString.Split(' ')[1];
+            string instruction = instructionString[0];
+            string mode = instructionString[1];
 
             if (makeLog)
             {
@@ -134,12 +145,7 @@ namespace NesEmulator
                     )
                 );
             }
-            
-            return this.execute(instruction, mode);
-        }
 
-        private int execute(string instruction, string mode)
-        {
             /*
             * JMP and JSR instructions work slightly differently,
             * as we need to operate on 2 bytes instead of a memory address
@@ -163,11 +169,14 @@ namespace NesEmulator
 
                 switch (mode)
                 {
-                    case "abs": {
+                    case "abs":
+                        {
                             this.mem.setPc(ll, hh);
                             return 3;
                         }
-                    case "ind": {
+                    case "ind":
+                        {
+                            // indirect wraps around with the lower byte. This is a glitch/feature in the MOS6502 processor
                             this.mem.setPc(
                                     this.mem.get(hh.unsigned() * 0x100 + ll.unsigned()),
                                     this.mem.get(hh.unsigned() * 0x100 + ((ll.unsigned() + 1) % 0x100))
@@ -189,8 +198,8 @@ namespace NesEmulator
                     absolute      JSR oper      20    3     6
                 */
                 byte v = (byte)(this.mem.pc[1].unsigned() + 1 > 0xff ? 0b1 : 0b0);
-                this.mem.push(new PureByte(this.mem.pc[0].unsigned() + v));
-                this.mem.push(new PureByte(this.mem.pc[1].unsigned() + 1));
+                this.mem.push(this.mem.pc[0].unsigned() + v);
+                this.mem.push(this.mem.pc[1].unsigned() + 1);
 
                 PureByte ll = this.mem.getCurrent();
                 this.mem.incrPc();
@@ -206,6 +215,19 @@ namespace NesEmulator
 
             this.getOper(mode);
 
+            if (this.oper.shared)
+            {
+                lock (this.oper)
+                {
+                    return this.execute(instruction, mode);
+                }
+            }
+            return this.execute(instruction, mode);
+            
+        }
+
+        private int execute(string instruction, string mode)
+        {
             switch (instruction)
             {
                 case "ADC": return this.ADC(mode);

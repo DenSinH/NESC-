@@ -317,7 +317,7 @@ namespace NesEmulator
             this.mem.setFlag('I', (byte)1);
             this.mem.push(this.mem.pc[0]);
             this.mem.push(this.mem.pc[1]);
-            this.mem.push(new PureByte(this.mem.sr.unsigned() | 0b00100000));
+            this.mem.push(this.mem.sr.unsigned() | 0b00110000);
             this.mem.setPc(this.mem.get(this.mem.irqVector[0]), this.mem.get(this.mem.irqVector[1]));
 
             if ("impl".Equals(mode))
@@ -943,7 +943,7 @@ namespace NesEmulator
                     implied       PHP           08    1     3;
             */
 
-            this.mem.push(new PureByte(this.mem.sr.unsigned() | 0b00100000));
+            this.mem.push(this.mem.sr.unsigned() | 0b00110000);
 
             if ("impl".Equals(mode))
             {
@@ -1007,9 +1007,8 @@ namespace NesEmulator
                     absolute      ROL oper      2E    3     6;
                     absolute,X    ROL oper,X    3E    3     7;
             */
-
-            byte c = this.oper.rol(this.mem.getFlag('C'));
-            this.mem.setFlag('C', c);
+            
+            this.mem.setFlag('C', this.oper.rol(this.mem.getFlag('C')));
             this.mem.setNZ(this.oper);
 
             switch (mode)

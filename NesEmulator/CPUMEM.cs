@@ -10,13 +10,30 @@ namespace NesEmulator
         public PureByte ac, x, y, sr, sp;
 
         public readonly int[] nmiVector = { 0xfffa, 0xfffb };
-        public readonly int[] resetVector = { 0xfffa, 0xfffb };
-        public readonly int[] irqVector = { 0xfffa, 0xfffb };
+        public readonly int[] resetVector = { 0xfffc, 0xfffd };
+        public readonly int[] irqVector = { 0xfffe, 0xffff };
 
         public CPUMEM()
         {
             this.storage = new PureByte[0x10000];
-            for (int i = 0; i < 0x10000; i++)
+            // memory map from https://wiki.nesdev.com/w/index.php/CPU_memory_map
+            for (int i = 0; i < 0x800; i++)
+            {
+                this.storage[i] = new PureByte();
+                this.storage[0x800 + i] = this.storage[i];
+                this.storage[0x1000 + i] = this.storage[i];
+                this.storage[0x1800 + i] = this.storage[i];
+            }
+            for (int i = 0; i < 8; i++)
+            {
+                this.storage[0x2000 + i] = new PureByte(true);
+                for (int j = 8; j < 0x1ff8; j += 8)
+                {
+                    this.storage[0x2000 + j + i] = this.storage[i];
+                }
+            }
+
+            for (int i = 0x4000; i < 0x10000; i++)
             {
                 this.storage[i] = new PureByte();
             }
@@ -29,7 +46,7 @@ namespace NesEmulator
             this.x = new PureByte();
             this.y = new PureByte();
             this.sr = new PureByte(0x24);
-            this.sp = new PureByte(0xfd);
+            this.sp = new PureByte(0x00);
         }
 
         public PureByte get(int item)
@@ -144,7 +161,17 @@ namespace NesEmulator
         {
             if (this.sp.unsigned() == 0)
             {
-                throw new Exception("Cannot push onto full stack");
+                Console.Error.WriteLine("Cannot push onto full stack");
+            }
+            this.storage[0x100 + this.sp.unsigned()].set(value);
+            this.sp.decr();
+        }
+
+        public void push(int value)
+        {
+            if (this.sp.unsigned() == 0)
+            {
+                Console.Error.WriteLine("Cannot push onto full stack");
             }
             this.storage[0x100 + this.sp.unsigned()].set(value);
             this.sp.decr();
@@ -154,7 +181,7 @@ namespace NesEmulator
         {
             if (this.sp.unsigned() >= 0xff)
             {
-                throw new Exception("Cannot pull from empty stack");
+                Console.Error.WriteLine("Cannot pull from empty stack");
             }
             this.sp.incr();
             return this.storage[0x100 + this.sp.unsigned()];

@@ -13,8 +13,15 @@ namespace NesEmulator
         {
             CPU cpu = new CPU();
             cpu.Load("../../roms/nestest.nes", 0xc000 - 0x10);
-            
             cpu.SetPc(0xc000);
+
+            // cpu.Load("../../roms/6502_functional_test.bin");
+            // cpu.SetPc(0x400);
+
+            // cpu.Load("../../roms/TTL6502.bin", 0xe000);
+
+            Console.WriteLine("Starting run in 2 seconds");
+            Thread.Sleep(2000);
 
             Stopwatch s = Stopwatch.StartNew();
             cpu.Run();

@@ -5,10 +5,17 @@ namespace NesEmulator
     class PureByte
     {
         private byte val;
+        public readonly bool shared;
 
         public PureByte()
         {
             this.val = 0;
+        }
+
+        public PureByte(bool shared)
+        {
+            this.val = 0;
+            this.shared = shared;
         }
 
         public PureByte(int value)
@@ -142,17 +149,12 @@ namespace NesEmulator
 
         public void lshift()
         {
-            this.val = (byte) ((this.val << 1) & 0xfe);
+            this.val <<= 1;
         }
 
         public void rshift()
         {
-            this.val = (byte)((this.val >> 1) & 0x7f);
-        }
-
-        public void rshift(int other)
-        {
-            this.val = (byte)((this.val >> other) & 0x7f);
+            this.val >>= 1;
         }
 
         public void invert()
