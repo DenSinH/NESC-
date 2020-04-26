@@ -1,0 +1,10 @@
+{
+  "zpg": 5,
+  "zpg,X": 6,
+  "abs": 6,
+  "abs,X": 7,
+  "abs,Y": 7,
+  "X,ind": 8,
+  "ind,Y": 8,
+  "internal": 0
+}
