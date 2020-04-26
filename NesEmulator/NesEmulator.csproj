@@ -61,9 +61,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CPU.instructions.cs" />
+    <Compile Include="Memory.cs" />
     <Compile Include="NES.cs" />
     <Compile Include="PPU.cs" />
     <Compile Include="PPUMEM.cs" />
+    <Compile Include="PPUOAM.cs" />
     <Compile Include="PureByte.cs" />
     <Compile Include="CPU.cs" />
     <Compile Include="CPUMEM.cs" />

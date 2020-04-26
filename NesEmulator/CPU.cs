@@ -15,7 +15,7 @@ namespace NesEmulator
         private const bool makeLog = false;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        private CPUMEM mem;
+        public CPUMEM mem;
         private int cycle;
         private bool kil = false;
 

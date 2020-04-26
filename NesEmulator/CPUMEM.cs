@@ -2,10 +2,8 @@
 
 namespace NesEmulator
 {
-    class CPUMEM
+    class CPUMEM : Memory
     {
-
-        private PureByte[] storage;
         public PureByte[] pc;
         public PureByte ac, x, y, sr, sp;
 
@@ -47,26 +45,6 @@ namespace NesEmulator
             this.y = new PureByte();
             this.sr = new PureByte(0x24);
             this.sp = new PureByte(0x00);
-        }
-
-        public PureByte get(int item)
-        {
-            return this.storage[item];
-        }
-
-        public PureByte get(PureByte ll, PureByte hh)
-        {
-            return this.storage[0x100 * hh.unsigned() + ll.unsigned()];
-        }
-
-        public void set(int index, PureByte value)
-        {
-            this.storage[index].set(value);
-        }
-
-        public void set(int index, int value)
-        {
-            this.storage[index].set(value);
         }
 
         public PureByte getCurrent()
