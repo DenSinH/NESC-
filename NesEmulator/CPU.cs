@@ -14,24 +14,6 @@ using System.Threading.Tasks;
 namespace NesEmulator
 {
 
-    class OperResult
-    {
-
-        public PureByte oper;
-        public byte pageChange;
-
-        public OperResult(PureByte oper, byte pageChange)
-        {
-            if ((pageChange & 0xfe) != 0)
-            {
-                throw new Exception("Page change must be 0 or 1");
-            }
-            this.oper = oper;
-            this.pageChange = pageChange;
-        }
-
-    }
-
     public class CPU
     {
 
@@ -41,6 +23,9 @@ namespace NesEmulator
         private CPUMEM mem;
         private int cycle;
         private bool kil = false;
+
+        private PureByte oper;
+        private byte pageChange;
 
         private Dictionary<string, string> opcodes;
         private Dictionary<string, string> illegalOpcodes;
@@ -224,80 +209,80 @@ namespace NesEmulator
                 return 6;
             }
 
-            OperResult or = this.getOper(mode);
+            this.getOper(mode);
 
             switch (instruction)
             {
-                case "ADC": return this.ADC(or.oper, mode, or.pageChange);
-                case "ALR": return this.ALR(or.oper, mode, or.pageChange);
-                case "AND": return this.AND(or.oper, mode, or.pageChange);
-                case "ARR": return this.ARR(or.oper, mode, or.pageChange);
-                case "ASL": return this.ASL(or.oper, mode, or.pageChange);
-                case "BCC": return this.BCC(or.oper, mode, or.pageChange);
-                case "BCS": return this.BCS(or.oper, mode, or.pageChange);
-                case "BEQ": return this.BEQ(or.oper, mode, or.pageChange);
-                case "BIT": return this.BIT(or.oper, mode, or.pageChange);
-                case "BMI": return this.BMI(or.oper, mode, or.pageChange);
-                case "BNE": return this.BNE(or.oper, mode, or.pageChange);
-                case "BPL": return this.BPL(or.oper, mode, or.pageChange);
-                case "BRK": return this.BRK(or.oper, mode, or.pageChange);
-                case "BVC": return this.BVC(or.oper, mode, or.pageChange);
-                case "BVS": return this.BVS(or.oper, mode, or.pageChange);
-                case "CLC": return this.CLC(or.oper, mode, or.pageChange);
-                case "CLD": return this.CLD(or.oper, mode, or.pageChange);
-                case "CLI": return this.CLI(or.oper, mode, or.pageChange);
-                case "CLV": return this.CLV(or.oper, mode, or.pageChange);
-                case "CMP": return this.CMP(or.oper, mode, or.pageChange);
-                case "CPX": return this.CPX(or.oper, mode, or.pageChange);
-                case "CPY": return this.CPY(or.oper, mode, or.pageChange);
-                case "DCP": return this.DCP(or.oper, mode, or.pageChange);
-                case "DEC": return this.DEC(or.oper, mode, or.pageChange);
-                case "DEX": return this.DEX(or.oper, mode, or.pageChange);
-                case "DEY": return this.DEY(or.oper, mode, or.pageChange);
-                case "EOR": return this.EOR(or.oper, mode, or.pageChange);
-                case "INC": return this.INC(or.oper, mode, or.pageChange);
-                case "INX": return this.INX(or.oper, mode, or.pageChange);
-                case "INY": return this.INY(or.oper, mode, or.pageChange);
-                case "ISC": return this.ISC(or.oper, mode, or.pageChange);
-                case "LAX": return this.LAX(or.oper, mode, or.pageChange);
-                case "LDA": return this.LDA(or.oper, mode, or.pageChange);
-                case "LDX": return this.LDX(or.oper, mode, or.pageChange);
-                case "LDY": return this.LDY(or.oper, mode, or.pageChange);
-                case "LSR": return this.LSR(or.oper, mode, or.pageChange);
-                case "NOP": return this.NOP(or.oper, mode, or.pageChange);
-                case "ORA": return this.ORA(or.oper, mode, or.pageChange);
-                case "PHA": return this.PHA(or.oper, mode, or.pageChange);
-                case "PHP": return this.PHP(or.oper, mode, or.pageChange);
-                case "PLA": return this.PLA(or.oper, mode, or.pageChange);
-                case "PLP": return this.PLP(or.oper, mode, or.pageChange);
-                case "RLA": return this.RLA(or.oper, mode, or.pageChange);
-                case "ROL": return this.ROL(or.oper, mode, or.pageChange);
-                case "ROR": return this.ROR(or.oper, mode, or.pageChange);
-                case "RRA": return this.RRA(or.oper, mode, or.pageChange);
-                case "RTI": return this.RTI(or.oper, mode, or.pageChange);
-                case "RTS": return this.RTS(or.oper, mode, or.pageChange);
-                case "SAX": return this.SAX(or.oper, mode, or.pageChange);
-                case "SBC": return this.SBC(or.oper, mode, or.pageChange);
-                case "SEC": return this.SEC(or.oper, mode, or.pageChange);
-                case "SED": return this.SED(or.oper, mode, or.pageChange);
-                case "SEI": return this.SEI(or.oper, mode, or.pageChange);
-                case "SLO": return this.SLO(or.oper, mode, or.pageChange);
-                case "SRE": return this.SRE(or.oper, mode, or.pageChange);
-                case "STA": return this.STA(or.oper, mode, or.pageChange);
-                case "STX": return this.STX(or.oper, mode, or.pageChange);
-                case "STY": return this.STY(or.oper, mode, or.pageChange);
-                case "TAX": return this.TAX(or.oper, mode, or.pageChange);
-                case "TAY": return this.TAY(or.oper, mode, or.pageChange);
-                case "TSX": return this.TSX(or.oper, mode, or.pageChange);
-                case "TXA": return this.TXA(or.oper, mode, or.pageChange);
-                case "TXS": return this.TXS(or.oper, mode, or.pageChange);
-                case "TYA": return this.TYA(or.oper, mode, or.pageChange);
-                case "XAA": return this.XAA(or.oper, mode, or.pageChange);
+                case "ADC": return this.ADC(mode);
+                case "ALR": return this.ALR(mode);
+                case "AND": return this.AND(mode);
+                case "ARR": return this.ARR(mode);
+                case "ASL": return this.ASL(mode);
+                case "BCC": return this.BCC(mode);
+                case "BCS": return this.BCS(mode);
+                case "BEQ": return this.BEQ(mode);
+                case "BIT": return this.BIT(mode);
+                case "BMI": return this.BMI(mode);
+                case "BNE": return this.BNE(mode);
+                case "BPL": return this.BPL(mode);
+                case "BRK": return this.BRK(mode);
+                case "BVC": return this.BVC(mode);
+                case "BVS": return this.BVS(mode);
+                case "CLC": return this.CLC(mode);
+                case "CLD": return this.CLD(mode);
+                case "CLI": return this.CLI(mode);
+                case "CLV": return this.CLV(mode);
+                case "CMP": return this.CMP(mode);
+                case "CPX": return this.CPX(mode);
+                case "CPY": return this.CPY(mode);
+                case "DCP": return this.DCP(mode);
+                case "DEC": return this.DEC(mode);
+                case "DEX": return this.DEX(mode);
+                case "DEY": return this.DEY(mode);
+                case "EOR": return this.EOR(mode);
+                case "INC": return this.INC(mode);
+                case "INX": return this.INX(mode);
+                case "INY": return this.INY(mode);
+                case "ISC": return this.ISC(mode);
+                case "LAX": return this.LAX(mode);
+                case "LDA": return this.LDA(mode);
+                case "LDX": return this.LDX(mode);
+                case "LDY": return this.LDY(mode);
+                case "LSR": return this.LSR(mode);
+                case "NOP": return this.NOP(mode);
+                case "ORA": return this.ORA(mode);
+                case "PHA": return this.PHA(mode);
+                case "PHP": return this.PHP(mode);
+                case "PLA": return this.PLA(mode);
+                case "PLP": return this.PLP(mode);
+                case "RLA": return this.RLA(mode);
+                case "ROL": return this.ROL(mode);
+                case "ROR": return this.ROR(mode);
+                case "RRA": return this.RRA(mode);
+                case "RTI": return this.RTI(mode);
+                case "RTS": return this.RTS(mode);
+                case "SAX": return this.SAX(mode);
+                case "SBC": return this.SBC(mode);
+                case "SEC": return this.SEC(mode);
+                case "SED": return this.SED(mode);
+                case "SEI": return this.SEI(mode);
+                case "SLO": return this.SLO(mode);
+                case "SRE": return this.SRE(mode);
+                case "STA": return this.STA(mode);
+                case "STX": return this.STX(mode);
+                case "STY": return this.STY(mode);
+                case "TAX": return this.TAX(mode);
+                case "TAY": return this.TAY(mode);
+                case "TSX": return this.TSX(mode);
+                case "TXA": return this.TXA(mode);
+                case "TXS": return this.TXS(mode);
+                case "TYA": return this.TYA(mode);
+                case "XAA": return this.XAA(mode);
                 default: throw new Exception("Unknown instruction: " + mode);
             }
         }
 
-        private OperResult getOper(string mode)
+        private void getOper(string mode)
         {
             PureByte ll;
             PureByte hh;
@@ -305,16 +290,22 @@ namespace NesEmulator
             switch (mode)
             {
                 case "impl":
-                    return new OperResult(new PureByte(), (byte)0);
+                    this.oper = new PureByte();
+                    this.pageChange = (byte)0;
+                    return;
                 case "A":
-                    return new OperResult(this.mem.ac, (byte)0);
+                    this.oper = this.mem.ac;
+                    this.pageChange = (byte)0;
+                    return;
                 case "abs":
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
                     hh = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(this.mem.get(ll, hh), (byte)0);
+                    this.oper = this.mem.get(ll, hh);
+                    this.pageChange = (byte)0;
+                    return;
 
                 case "abs,X":
                     ll = this.mem.getCurrent();
@@ -322,10 +313,9 @@ namespace NesEmulator
                     hh = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(
-                            this.mem.get((hh.unsigned() * 0x100 + ll.unsigned() + this.mem.x.unsigned()) % 0x10000),
-                            (byte)(ll.unsigned() + this.mem.x.unsigned() > 0xff ? 1 : 0)
-                    );
+                    this.oper = this.mem.get((hh.unsigned() * 0x100 + ll.unsigned() + this.mem.x.unsigned()) % 0x10000);
+                    this.pageChange = (byte)(ll.unsigned() + this.mem.x.unsigned() > 0xff ? 1 : 0);
+                    return;
 
                 case "abs,Y":
                     ll = this.mem.getCurrent();
@@ -333,26 +323,27 @@ namespace NesEmulator
                     hh = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(
-                            this.mem.get((hh.unsigned() * 0x100 + ll.unsigned() + this.mem.y.unsigned()) % 0x10000),
-                            (byte)(ll.unsigned() + this.mem.y.unsigned() > 0xff ? 1 : 0)
-                    );
+                    this.oper = this.mem.get((hh.unsigned() * 0x100 + ll.unsigned() + this.mem.y.unsigned()) % 0x10000);
+                    this.pageChange = (byte)(ll.unsigned() + this.mem.y.unsigned() > 0xff ? 1 : 0);
+                    return;
 
                 case "#":
-                    PureByte oper = this.mem.getCurrent();
+                    this.oper = this.mem.getCurrent();
                     this.mem.incrPc();
-                    return new OperResult(oper, (byte)0);
+
+                    this.pageChange = (byte)0;
+                    return;
 
                 case "X,ind":
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(
-                            this.mem.get(
+                    this.oper = this.mem.get(
                                     this.mem.get((ll.unsigned() + this.mem.x.unsigned()) % 0x100),
                                     this.mem.get((ll.unsigned() + this.mem.x.unsigned() + 1) % 0x100)
-                            ), (byte)0
-                    );
+                            );
+                    this.pageChange = (byte)0;
+                    return;
 
                 case "ind,Y":
                     ll = this.mem.getCurrent();
@@ -362,42 +353,49 @@ namespace NesEmulator
                     int effective_high = this.mem.get((ll.unsigned() + 1) % 0x100).unsigned() * 0x100;
                     int effective = (effective_high + effective_low + this.mem.y.unsigned()) % 0x10000;
 
-                    return new OperResult(
-                            this.mem.get(effective), (byte)(effective_low + this.mem.y.unsigned() > 0xff ? 1 : 0)
-                    );
+                    this.oper = this.mem.get(effective);
+                    this.pageChange = (byte)(effective_low + this.mem.y.unsigned() > 0xff ? 1 : 0);
+                    return;
 
                 case "rel":
-                    ll = this.mem.getCurrent();
+                    this.oper = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(ll, (byte)0);
+                    this.pageChange = (byte)0;
+                    return;
 
                 case "zpg":
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(this.mem.get(ll.unsigned()), (byte)0);
+                    this.oper = this.mem.get(ll.unsigned());
+                    this.pageChange = (byte)0;
+                    return;
 
                 case "zpg,X":
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(this.mem.get((ll.unsigned() + this.mem.x.unsigned()) % 0x100), (byte)0);
+                    this.oper = this.mem.get((ll.unsigned() + this.mem.x.unsigned()) % 0x100);
+                    this.pageChange = (byte)0;
+                    return;
 
                 case "zpg,Y":
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    return new OperResult(this.mem.get((ll.unsigned() + this.mem.y.unsigned()) % 0x100), (byte)0);
+                    this.oper = this.mem.get((ll.unsigned() + this.mem.y.unsigned()) % 0x100);
+                    this.pageChange = (byte)0;
+                    return;
 
                 default:
                     throw new Exception("Unknown mode: " + mode);
             }
         }
 
-        private int branch(PureByte oper)
+        private int branch()
         {
-            int target = this.mem.pc[1].unsigned() + oper.signed();
+            int target = this.mem.pc[1].unsigned() + this.oper.signed();
             int c = 0;
             if (target > 0xff)
             {
@@ -408,7 +406,7 @@ namespace NesEmulator
                 c = -1;
             }
 
-            this.mem.pc[1].add(oper.signed());
+            this.mem.pc[1].add(this.oper.signed());
             if (c != 0)
             {
                 this.mem.pc[0].add(c);
@@ -417,7 +415,7 @@ namespace NesEmulator
             return c;
         }
 
-        private int ADC(PureByte oper, string mode, int pageChange)
+        private int ADC(string mode)
         {
             /*
             ADC  Add Memory to Accumulator with Carry
@@ -435,8 +433,8 @@ namespace NesEmulator
                     (indirect),Y  ADC (oper),Y  71    2     5*
             */
 
-            int unsigned_result = this.mem.ac.unsigned() + oper.unsigned() + this.mem.getFlag('C');
-            int signed_result = this.mem.ac.signed() + oper.signed() + this.mem.getFlag('C');
+            int unsigned_result = this.mem.ac.unsigned() + this.oper.unsigned() + this.mem.getFlag('C');
+            int signed_result = this.mem.ac.signed() + this.oper.signed() + this.mem.getFlag('C');
 
             this.mem.ac.set(unsigned_result);
 
@@ -459,7 +457,7 @@ namespace NesEmulator
             };
         }
 
-        private int AND(PureByte oper, string mode, int pageChange)
+        private int AND(string mode)
         {
             /*
             AND  AND Memory with Accumulator
@@ -477,7 +475,7 @@ namespace NesEmulator
                     (indirect),Y  AND (oper),Y  31    2     5*
             */
 
-            this.mem.ac.and(oper);
+            this.mem.ac.and(this.oper);
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -495,7 +493,7 @@ namespace NesEmulator
             };
         }
 
-        private int ASL(PureByte oper, string mode, int pageChange)
+        private int ASL(string mode)
         {
             /*
             ASL  Shift Left One Bit (Memory || Accumulator);
@@ -510,9 +508,9 @@ namespace NesEmulator
                     absolute,X    ASL oper,X    1E    3     7;
             */
 
-            this.mem.setFlag('C', (byte)(oper.unsigned() >= 128 ? 1 : 0));
-            oper.lshift();
-            this.mem.setNZ(oper);
+            this.mem.setFlag('C', (byte)(this.oper.unsigned() >= 128 ? 1 : 0));
+            this.oper.lshift();
+            this.mem.setNZ(this.oper);
 
             switch (mode)
             {
@@ -526,7 +524,7 @@ namespace NesEmulator
             };
         }
 
-        private int BCC(PureByte oper, string mode, int pageChange)
+        private int BCC(string mode)
         {
             /*
             BCC  Branch on Carry Clear
@@ -541,7 +539,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('C') == 0)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -552,7 +550,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BCS(PureByte oper, string mode, int pageChange)
+        private int BCS(string mode)
         {
             /*
             BCS  Branch on Carry Set
@@ -567,7 +565,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('C') == 1)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -578,7 +576,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BEQ(PureByte oper, string mode, int pageChange)
+        private int BEQ(string mode)
         {
             /*
             BEQ  Branch on Result Zero
@@ -593,7 +591,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('Z') == 1)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -604,7 +602,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BIT(PureByte oper, string mode, int pageChange)
+        private int BIT(string mode)
         {
             /*
             BIT  Test Bits in Memory with Accumulator
@@ -618,9 +616,9 @@ namespace NesEmulator
                     absolute      BIT oper      2C    3     4;
             */
 
-            this.mem.setFlag('N', oper.getBit(7));
-            this.mem.setFlag('V', oper.getBit(6));
-            this.mem.setFlag('Z', (byte)((oper.unsigned() & this.mem.ac.unsigned()) == 0 ? 1 : 0));
+            this.mem.setFlag('N', this.oper.getBit(7));
+            this.mem.setFlag('V', this.oper.getBit(6));
+            this.mem.setFlag('Z', (byte)((this.oper.unsigned() & this.mem.ac.unsigned()) == 0 ? 1 : 0));
 
             switch (mode)
             {
@@ -630,7 +628,7 @@ namespace NesEmulator
             };
         }
 
-        private int BMI(PureByte oper, string mode, int pageChange)
+        private int BMI(string mode)
         {
             /*
             BMI  Branch on Result Minus
@@ -645,7 +643,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('N') == 1)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -656,7 +654,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BNE(PureByte oper, string mode, int pageChange)
+        private int BNE(string mode)
         {
             /*
             BNE  Branch on Result not Zero
@@ -671,7 +669,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('Z') == 0)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -682,7 +680,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BPL(PureByte oper, string mode, int pageChange)
+        private int BPL(string mode)
         {
             /*
             BPL  Branch on Result Plus
@@ -697,7 +695,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('N') == 0)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -708,7 +706,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BRK(PureByte oper, string mode, int pageChange)
+        private int BRK(string mode)
         {
             /*
             BRK  Force Break
@@ -732,7 +730,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BVC(PureByte oper, string mode, int pageChange)
+        private int BVC(string mode)
         {
             /*
             BVC  Branch on Overflow Clear
@@ -747,7 +745,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('V') == 0)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -758,7 +756,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BVS(PureByte oper, string mode, int pageChange)
+        private int BVS(string mode)
         {
             /*
             BVS  Branch on Overflow Set
@@ -773,7 +771,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('V') == 1)
                 {
-                    if (this.branch(oper) == 1)
+                    if (this.branch() == 1)
                     {
                         return 4;
                     }
@@ -784,7 +782,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLC(PureByte oper, string mode, int pageChange)
+        private int CLC(string mode)
         {
             /*
             CLC  Clear Carry Flag
@@ -804,7 +802,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLD(PureByte oper, string mode, int pageChange)
+        private int CLD(string mode)
         {
             /*
             CLD  Clear Decimal Mode
@@ -824,7 +822,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLI(PureByte oper, string mode, int pageChange)
+        private int CLI(string mode)
         {
             /*
             CLI  Clear Interrupt Disable Bit
@@ -844,7 +842,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLV(PureByte oper, string mode, int pageChange)
+        private int CLV(string mode)
         {
             /*
             CLV  Clear Overflow Flag
@@ -864,7 +862,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CMP(PureByte oper, string mode, int pageChange)
+        private int CMP(string mode)
         {
             /*
             CMP  Compare Memory with Accumulator
@@ -882,9 +880,9 @@ namespace NesEmulator
                     (indirect),Y  CMP (oper),Y  D1    2     5*
             */
 
-            this.mem.setFlag('C', (byte)(this.mem.ac.unsigned() >= oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('Z', (byte)(this.mem.ac.unsigned() == oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('N', (new PureByte(this.mem.ac.unsigned() - oper.unsigned())).getBit(7));
+            this.mem.setFlag('C', (byte)(this.mem.ac.unsigned() >= this.oper.unsigned() ? 1 : 0));
+            this.mem.setFlag('Z', (byte)(this.mem.ac.unsigned() == this.oper.unsigned() ? 1 : 0));
+            this.mem.setFlag('N', (new PureByte(this.mem.ac.unsigned() - this.oper.unsigned())).getBit(7));
 
             switch (mode)
             {
@@ -901,7 +899,7 @@ namespace NesEmulator
             };
         }
 
-        private int CPX(PureByte oper, string mode, int pageChange)
+        private int CPX(string mode)
         {
             /*
             CPX  Compare Memory && Index X
@@ -914,9 +912,9 @@ namespace NesEmulator
                     absolute      CPX oper      EC    3     4;
             */
 
-            this.mem.setFlag('C', (byte)(this.mem.x.unsigned() >= oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('Z', (byte)(this.mem.x.unsigned() == oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('N', (new PureByte(this.mem.x.unsigned() - oper.unsigned())).getBit(7));
+            this.mem.setFlag('C', (byte)(this.mem.x.unsigned() >= this.oper.unsigned() ? 1 : 0));
+            this.mem.setFlag('Z', (byte)(this.mem.x.unsigned() == this.oper.unsigned() ? 1 : 0));
+            this.mem.setFlag('N', (new PureByte(this.mem.x.unsigned() - this.oper.unsigned())).getBit(7));
 
             switch (mode)
             {
@@ -927,7 +925,7 @@ namespace NesEmulator
             };
         }
 
-        private int CPY(PureByte oper, string mode, int pageChange)
+        private int CPY(string mode)
         {
             /*
             CPY  Compare Memory && Index Y
@@ -940,9 +938,9 @@ namespace NesEmulator
                     absolute      CPY oper      CC    3     4;
             */
 
-            this.mem.setFlag('C', (byte)(this.mem.y.unsigned() >= oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('Z', (byte)(this.mem.y.unsigned() == oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('N', (new PureByte(this.mem.y.unsigned() - oper.unsigned())).getBit(7));
+            this.mem.setFlag('C', (byte)(this.mem.y.unsigned() >= this.oper.unsigned() ? 1 : 0));
+            this.mem.setFlag('Z', (byte)(this.mem.y.unsigned() == this.oper.unsigned() ? 1 : 0));
+            this.mem.setFlag('N', (new PureByte(this.mem.y.unsigned() - this.oper.unsigned())).getBit(7));
 
             switch (mode)
             {
@@ -953,7 +951,7 @@ namespace NesEmulator
             };
         }
 
-        private int DEC(PureByte oper, string mode, int pageChange)
+        private int DEC(string mode)
         {
             /*
             DEC  Decrement Memory by One
@@ -967,8 +965,8 @@ namespace NesEmulator
                     absolute,X    DEC oper,X    DE    3     7;
             */
 
-            oper.decr();
-            this.mem.setNZ(oper);
+            this.oper.decr();
+            this.mem.setNZ(this.oper);
 
             switch (mode)
             {
@@ -981,7 +979,7 @@ namespace NesEmulator
             };
         }
 
-        private int DEX(PureByte oper, string mode, int pageChange)
+        private int DEX(string mode)
         {
             /*
             DEX  Decrement Index X by One
@@ -1002,7 +1000,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int DEY(PureByte oper, string mode, int pageChange)
+        private int DEY(string mode)
         {
             /*
             DEY  Decrement Index Y by One
@@ -1023,7 +1021,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int EOR(PureByte oper, string mode, int pageChange)
+        private int EOR(string mode)
         {
             /*
             EOR  Exclusive-OR Memory with Accumulator
@@ -1041,7 +1039,7 @@ namespace NesEmulator
                     (indirect),Y  EOR (oper),Y  51    2     5*
             */
 
-            this.mem.ac.xor(oper);
+            this.mem.ac.xor(this.oper);
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -1059,7 +1057,7 @@ namespace NesEmulator
             };
         }
 
-        private int INC(PureByte oper, string mode, int pageChange)
+        private int INC(string mode)
         {
             /*
             INC  Increment Memory by One
@@ -1073,8 +1071,8 @@ namespace NesEmulator
                     absolute,X    INC oper,X    FE    3     7;
             */
 
-            oper.incr();
-            this.mem.setNZ(oper);
+            this.oper.incr();
+            this.mem.setNZ(this.oper);
 
             switch (mode)
             {
@@ -1087,7 +1085,7 @@ namespace NesEmulator
             };
         }
 
-        private int INX(PureByte oper, string mode, int pageChange)
+        private int INX(string mode)
         {
             /*
             INX  Increment Index X by One
@@ -1108,7 +1106,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int INY(PureByte oper, string mode, int pageChange)
+        private int INY(string mode)
         {
             /*
             INY  Increment Index Y by One
@@ -1129,7 +1127,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int LDA(PureByte oper, string mode, int pageChange)
+        private int LDA(string mode)
         {
             /*
             LDA  Load Accumulator with Memory
@@ -1147,7 +1145,7 @@ namespace NesEmulator
                     (indirect),Y  LDA (oper),Y  B1    2     5*
             */
 
-            this.mem.ac.set(oper);
+            this.mem.ac.set(this.oper);
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -1165,7 +1163,7 @@ namespace NesEmulator
             };
         }
 
-        private int LDX(PureByte oper, string mode, int pageChange)
+        private int LDX(string mode)
         {
             /*
             LDX  Load Index X with Memory
@@ -1180,7 +1178,7 @@ namespace NesEmulator
                     absolute,Y    LDX oper,Y    BE    3     4*
             */
 
-            this.mem.x.set(oper);
+            this.mem.x.set(this.oper);
             this.mem.setNZ(this.mem.x);
 
             switch (mode)
@@ -1195,7 +1193,7 @@ namespace NesEmulator
             };
         }
 
-        private int LDY(PureByte oper, string mode, int pageChange)
+        private int LDY(string mode)
         {
             /*
             LDY  Load Index Y with Memory
@@ -1210,7 +1208,7 @@ namespace NesEmulator
                     absolute,X    LDY oper,X    BC    3     4*
             */
 
-            this.mem.y.set(oper);
+            this.mem.y.set(this.oper);
             this.mem.setNZ(this.mem.y);
 
             switch (mode)
@@ -1224,7 +1222,7 @@ namespace NesEmulator
             };
         }
 
-        private int LSR(PureByte oper, string mode, int pageChange)
+        private int LSR(string mode)
         {
             /*
             LSR  Shift One Bit Right (Memory || Accumulator);
@@ -1239,9 +1237,9 @@ namespace NesEmulator
                 absolute,X    LSR oper,X    5E    3     7;
             */
 
-            byte c = oper.getBit(0);
-            oper.rshift();
-            this.mem.setNZ(oper);
+            byte c = this.oper.getBit(0);
+            this.oper.rshift();
+            this.mem.setNZ(this.oper);
             this.mem.setFlag('C', c);
 
             switch (mode)
@@ -1256,7 +1254,7 @@ namespace NesEmulator
             };
         }
 
-        private int NOP(PureByte oper, string mode, int pageChange)
+        private int NOP(string mode)
         {
             /*
             NOP  No Operation
@@ -1281,7 +1279,7 @@ namespace NesEmulator
             };
         }
 
-        private int ORA(PureByte oper, string mode, int pageChange)
+        private int ORA(string mode)
         {
             /*
             ORA  OR Memory with Accumulator
@@ -1299,7 +1297,7 @@ namespace NesEmulator
                     (indirect),Y  ORA (oper),Y  11    2     5*
             */
 
-            this.mem.ac.or(oper);
+            this.mem.ac.or(this.oper);
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -1317,7 +1315,7 @@ namespace NesEmulator
             };
         }
 
-        private int PHA(PureByte oper, string mode, int pageChange)
+        private int PHA(string mode)
         {
             /*
             PHA  Push Accumulator on Stack
@@ -1337,7 +1335,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int PHP(PureByte oper, string mode, int pageChange)
+        private int PHP(string mode)
         {
             /*
             PHP  Push Processor Status on Stack
@@ -1357,7 +1355,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int PLA(PureByte oper, string mode, int pageChange)
+        private int PLA(string mode)
         {
             /*
             PLA  Pull Accumulator from Stack
@@ -1378,7 +1376,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int PLP(PureByte oper, string mode, int pageChange)
+        private int PLP(string mode)
         {
             /*
             PLP  Pull Processor Status from Stack
@@ -1398,7 +1396,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int ROL(PureByte oper, string mode, int pageChange)
+        private int ROL(string mode)
         {
             /*
             ROL  Rotate One Bit Left (Memory || Accumulator);
@@ -1413,9 +1411,9 @@ namespace NesEmulator
                     absolute,X    ROL oper,X    3E    3     7;
             */
 
-            byte c = oper.rol(this.mem.getFlag('C'));
+            byte c = this.oper.rol(this.mem.getFlag('C'));
             this.mem.setFlag('C', c);
-            this.mem.setNZ(oper);
+            this.mem.setNZ(this.oper);
 
             switch (mode)
             {
@@ -1429,7 +1427,7 @@ namespace NesEmulator
             };
         }
 
-        private int ROR(PureByte oper, string mode, int pageChange)
+        private int ROR(string mode)
         {
             /*
             ROR  Rotate One Bit Right (Memory || Accumulator);
@@ -1444,9 +1442,9 @@ namespace NesEmulator
                     absolute,X    ROR oper,X    7E    3     7;
             */
             
-            byte c = oper.ror(this.mem.getFlag('C'));
+            byte c = this.oper.ror(this.mem.getFlag('C'));
             this.mem.setFlag('C', c);
-            this.mem.setNZ(oper);
+            this.mem.setNZ(this.oper);
 
             switch (mode)
             {
@@ -1460,7 +1458,7 @@ namespace NesEmulator
             };
         }
 
-        private int RTI(PureByte oper, string mode, int pageChange)
+        private int RTI(string mode)
         {
             /*
                 RTI  Return from Interrupt
@@ -1483,7 +1481,7 @@ namespace NesEmulator
 
         }
 
-        private int RTS(PureByte oper, string mode, int pageChange)
+        private int RTS(string mode)
         {
             /*
             RTS  Return from Subroutine
@@ -1506,7 +1504,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SBC(PureByte oper, string mode, int pageChange)
+        private int SBC(string mode)
         {
             /*
             SBC  Subtract Memory from Accumulator with Borrow
@@ -1523,7 +1521,8 @@ namespace NesEmulator
                     (indirect,X)  SBC (oper,X)  E1    2     6;
                     (indirect),Y  SBC (oper),Y  F1    2     5*
             */
-            this.ADC(new PureByte(oper.unsigned() ^ 0xff), mode, pageChange);
+            this.oper = new PureByte(oper.unsigned() ^ 0xff);
+            this.ADC(mode);
 
             switch (mode)
             {
@@ -1540,7 +1539,7 @@ namespace NesEmulator
             };
         }
 
-        private int SEC(PureByte oper, string mode, int pageChange)
+        private int SEC(string mode)
         {
             /*
             SEC  Set Carry Flag
@@ -1561,7 +1560,7 @@ namespace NesEmulator
             };
         }
 
-        private int SED(PureByte oper, string mode, int pageChange)
+        private int SED(string mode)
         {
             /*
             SED  Set Decimal Flag
@@ -1581,7 +1580,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SEI(PureByte oper, string mode, int pageChange)
+        private int SEI(string mode)
         {
             /*
             SEI  Set Interrupt Disable Status
@@ -1601,7 +1600,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int STA(PureByte oper, string mode, int pageChange)
+        private int STA(string mode)
         {
             /*
             STA  Store Accumulator in Memory
@@ -1618,7 +1617,7 @@ namespace NesEmulator
                     (indirect),Y  STA (oper),Y  91    2     6;
             */
 
-            oper.set(this.mem.ac);
+            this.oper.set(this.mem.ac);
 
             switch (mode)
             {
@@ -1634,7 +1633,7 @@ namespace NesEmulator
             };
         }
 
-        private int STX(PureByte oper, string mode, int pageChange)
+        private int STX(string mode)
         {
             /*
             STX  Store Index X in Memory
@@ -1647,7 +1646,7 @@ namespace NesEmulator
                     absolute      STX oper      8E    3     4;
             */
 
-            oper.set(this.mem.x);
+            this.oper.set(this.mem.x);
 
             switch (mode)
             {
@@ -1659,7 +1658,7 @@ namespace NesEmulator
             };
         }
 
-        private int STY(PureByte oper, string mode, int pageChange)
+        private int STY(string mode)
         {
             /*
             STY  Sore Index Y in Memory
@@ -1672,7 +1671,7 @@ namespace NesEmulator
                     absolute      STY oper      8C    3     4;
             */
 
-            oper.set(this.mem.y);
+            this.oper.set(this.mem.y);
 
             switch (mode)
             {
@@ -1683,7 +1682,7 @@ namespace NesEmulator
             };
         }
 
-        private int TAX(PureByte oper, string mode, int pageChange)
+        private int TAX(string mode)
         {
             /*
             TAX  Transfer Accumulator to Index X
@@ -1705,7 +1704,7 @@ namespace NesEmulator
             };
         }
 
-        private int TAY(PureByte oper, string mode, int pageChange)
+        private int TAY(string mode)
         {
             /*
             TAY  Transfer Accumulator to Index Y
@@ -1726,7 +1725,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int TSX(PureByte oper, string mode, int pageChange)
+        private int TSX(string mode)
         {
             /*
             TSX  Transfer Stack Pointer to Index X
@@ -1747,7 +1746,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int TXA(PureByte oper, string mode, int pageChange)
+        private int TXA(string mode)
         {
             /*
             TXA  Transfer Index X to Accumulator
@@ -1769,7 +1768,7 @@ namespace NesEmulator
             };
         }
 
-        private int TXS(PureByte oper, string mode, int pageChange)
+        private int TXS(string mode)
         {
             /*
             TXS  Transfer Index X to Stack Register
@@ -1789,7 +1788,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int TYA(PureByte oper, string mode, int pageChange)
+        private int TYA(string mode)
         {
             /*
             TYA  Transfer Index Y to Accumulator
@@ -1810,7 +1809,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SLO(PureByte oper, string mode, int pageChange)
+        private int SLO(string mode)
         {
             /*
             ASO    ***    (SLO);
@@ -1839,8 +1838,8 @@ namespace NesEmulator
             ORA $C010;
             */
 
-            this.ASL(oper, "internal", 0);
-            this.ORA(oper, "internal", 0);
+            this.ASL("internal");
+            this.ORA("internal");
 
             switch (mode)
             {
@@ -1855,7 +1854,7 @@ namespace NesEmulator
             };
         }
 
-        private int RLA(PureByte oper, string mode, int pageChange)
+        private int RLA(string mode)
         {
             /*
             RLA    ***
@@ -1884,8 +1883,8 @@ namespace NesEmulator
             AND $FC,X
             */
 
-            this.ROL(oper, "internal", 0);
-            this.AND(oper, "internal", 0);
+            this.ROL("internal");
+            this.AND("internal");
 
             switch (mode)
             {
@@ -1900,7 +1899,7 @@ namespace NesEmulator
             };
         }
 
-        private int SRE(PureByte oper, string mode, int pageChange)
+        private int SRE(string mode)
         {
             /*
             LSE    ***   (SRE);
@@ -1929,8 +1928,8 @@ namespace NesEmulator
             EOR $C100,X
             */
 
-            this.LSR(oper, "internal", 0);
-            this.EOR(oper, "internal", 0);
+            this.LSR("internal");
+            this.EOR("internal");
 
             switch (mode)
             {
@@ -1945,7 +1944,7 @@ namespace NesEmulator
             };
         }
 
-        private int RRA(PureByte oper, string mode, int pageChange)
+        private int RRA(string mode)
         {
             /*
             RRA    ***
@@ -1974,8 +1973,8 @@ namespace NesEmulator
             ADC $030C
             */
          
-            this.ROR(oper, "internal", 0);
-            this.ADC(oper, "internal", 0);
+            this.ROR("internal");
+            this.ADC("internal");
 
             switch (mode)
             {
@@ -1990,7 +1989,7 @@ namespace NesEmulator
             };
         }
 
-        private int SAX(PureByte oper, string mode, int pageChange)
+        private int SAX(string mode)
         {
             /*
             AXS    ***    (SAX);
@@ -2032,7 +2031,7 @@ namespace NesEmulator
             };
         }
 
-        private int LAX(PureByte oper, string mode, int pageChange)
+        private int LAX(string mode)
         {
             /*
             LAX    ***
@@ -2060,8 +2059,8 @@ namespace NesEmulator
             LDX $8400,Y
             */
 
-            this.LDA(oper, "internal", 0);
-            this.LDX(oper, "internal", 0);
+            this.LDA("internal");
+            this.LDX("internal");
 
             switch (mode)
             {
@@ -2075,7 +2074,7 @@ namespace NesEmulator
             };
         }
 
-        private int DCP(PureByte oper, string mode, int pageChange)
+        private int DCP(string mode)
         {
             /*
             DCM    ***    (DCP);
@@ -2104,8 +2103,8 @@ namespace NesEmulator
             CMP $FF
             */
 
-            this.DEC(oper, "internal", 0);
-            this.CMP(oper, "internal", 0);
+            this.DEC("internal");
+            this.CMP("internal");
 
             switch (mode)
             {
@@ -2120,7 +2119,7 @@ namespace NesEmulator
             };
         }
 
-        private int ISC(PureByte oper, string mode, int pageChange)
+        private int ISC(string mode)
         {
             /*
             INS    ***    (ISC);
@@ -2149,8 +2148,8 @@ namespace NesEmulator
             SBC $FF
             */
 
-            this.INC(oper, "internal", 0);
-            this.SBC(oper, "internal", 0);
+            this.INC("internal");
+            this.SBC("internal");
 
             switch (mode)
             {
@@ -2165,7 +2164,7 @@ namespace NesEmulator
             };
         }
 
-        private int ALR(PureByte oper, string mode, int pageChange)
+        private int ALR(string mode)
         {
             /*
             ALR    ***
@@ -2186,8 +2185,9 @@ namespace NesEmulator
             LSR A
             */
 
-            this.AND(oper, "internal", 0);
-            this.LSR(this.mem.ac, "A", 0);
+            this.AND("internal");
+            this.oper = this.mem.ac;
+            this.LSR("A");
 
             if ("#".Equals(mode))
             {
@@ -2196,7 +2196,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int ARR(PureByte oper, string mode, int pageChange)
+        private int ARR(string mode)
         {
             /*
             ARR    ***
@@ -2217,8 +2217,9 @@ namespace NesEmulator
             ROR A
             */
 
-            this.AND(oper, "internal", 0);
-            this.ROR(this.mem.ac, "A", 0);
+            this.AND("internal");
+            this.oper = this.mem.ac;
+            this.ROR("A");
 
             if ("#".Equals(mode))
             {
@@ -2227,7 +2228,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int XAA(PureByte oper, string mode, int pageChange)
+        private int XAA(string mode)
         {
             /*
             XAA    ***
@@ -2248,8 +2249,9 @@ namespace NesEmulator
             AND #$44;
             */
 
-            this.TXA(new PureByte(), "internal", 0);
-            this.AND(oper, "internal", 0);
+            this.oper = new PureByte();
+            this.TXA("internal");
+            this.AND("internal");
 
             if ("#".Equals(mode))
             {
@@ -2258,7 +2260,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int OAL(PureByte oper, string mode, int pageChange)
+        private int OAL(string mode)
         {
             /*
             OAL    ***
@@ -2280,9 +2282,11 @@ namespace NesEmulator
             TAX
             */
 
-            this.ORA(new PureByte(0xee), "#", 0);
-            this.AND(oper, "internal", 0);
-            this.TAX(new PureByte(), "internal", 0);
+            this.oper = new PureByte(0xee);
+            this.ORA("#");
+            this.AND("internal");
+            this.oper = new PureByte();
+            this.TAX("internal");
 
             if ("#".Equals(mode))
             {
@@ -2291,7 +2295,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SKB(PureByte oper, string mode, int pageChange)
+        private int SKB(string mode)
         {
             /*
             SKB stands for skip next byte.
@@ -2311,7 +2315,7 @@ namespace NesEmulator
             };
         }
 
-        private int SKW(PureByte oper, string mode, int pageChange)
+        private int SKW(string mode)
         {
             /*
             SKW skips next word (two bytes).
