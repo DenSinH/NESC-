@@ -113,7 +113,7 @@ namespace NesEmulator
 
         public int step()
         {
-            string opcode = String.Format("0x{0:X}", this.mem.getCurrent().unsigned()).ToLower();
+            string opcode = this.mem.getCurrent().hex();
             this.mem.incrPc();
 
             string instructionString;
@@ -138,20 +138,20 @@ namespace NesEmulator
             if (makeLog)
             {
                 this.log(
-                        string.Format(
-                                "    {0}  {1} {2}: {3,5}\t\t{4}     A:{5} X:{6} Y:{7} P:{8} SP:{9}        CYC:{10}",
-                                (this.mem.getPc() - 1).ToString("x2"),
-                                opcode,
-                                instruction,
-                                mode,
-                                this.mem.getCurrent().unsigned().ToString("x2"),
-                                this.mem.ac.hex(),
-                                this.mem.x.hex(),
-                                this.mem.y.hex(),
-                                this.mem.sr.hex(),
-                                this.mem.sp.hex(),
-                                this.cycle
-                        )
+                    string.Format(
+                        "    {0}  {1} {2}: {3,5}\t\t{4}     A:{5} X:{6} Y:{7} P:{8} SP:{9}        CYC:{10}",
+                        (this.mem.getPc() - 1).ToString("x2"),
+                        opcode,
+                        instruction,
+                        mode,
+                        this.mem.getCurrent().unsigned().ToString("x2"),
+                        this.mem.ac.hex(),
+                        this.mem.x.hex(),
+                        this.mem.y.hex(),
+                        this.mem.sr.hex(),
+                        this.mem.sp.hex(),
+                        this.cycle
+                    )
                 );
             }
             

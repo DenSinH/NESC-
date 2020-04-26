@@ -218,7 +218,7 @@ namespace NesEmulator
 
         public string hex()
         {
-            return this.val.ToString("x2");
+            return this.val.ToString("x");
         }
     }
 }
