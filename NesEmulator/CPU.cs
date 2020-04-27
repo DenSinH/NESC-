@@ -12,6 +12,8 @@ namespace NesEmulator
 
     class InstructionCaller
     {
+        // wrapper for an instruction with mode
+
         private Func<string, int> method;
         public string mode;
 
@@ -30,7 +32,6 @@ namespace NesEmulator
 
     partial class CPU
     {
-
         private const bool makeLog = false;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -52,7 +53,7 @@ namespace NesEmulator
             // load opcodes
 
             string opcodeJson = File.ReadAllText("../../data/AllOpcodes.json");
-            Dictionary<string, string>  opcodes = JsonConvert.DeserializeObject<Dictionary<string, string>>(opcodeJson);
+            Dictionary<string, string> opcodes = JsonConvert.DeserializeObject<Dictionary<string, string>>(opcodeJson);
 
             this.instructions = new InstructionCaller[0x100];
 
@@ -139,7 +140,7 @@ namespace NesEmulator
                     this.instructions[int.Parse(entry.Key, NumberStyles.HexNumber)] = new InstructionCaller(instruction, instructionString[1]);
                 }
             }
-            
+
         }
 
         private void log(string message)
@@ -282,7 +283,7 @@ namespace NesEmulator
                     --------------------------------------------
                     absolute      JSR oper      20    3     6
                 */
-                byte v = (byte)(this.mem.pc[1].unsigned() + 1 > 0xff ? 0b1 : 0b0);
+                byte v = (byte)(this.mem.pc[1].unsigned() + 1 > 0xff ? 1 : 0);
                 this.mem.push(this.mem.pc[0].unsigned() + v);
                 this.mem.push(this.mem.pc[1].unsigned() + 1);
 
@@ -296,7 +297,7 @@ namespace NesEmulator
             InstructionCaller ic = this.instructions[opcode];
             if (ic == null)
             {
-                // Unknown opcodes is interpreted as KIL instruction
+                // Unknown opcode is interpreted as KIL instruction
                 this.kil = true;
                 return 0;
             }

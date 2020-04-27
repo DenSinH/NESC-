@@ -1923,6 +1923,5 @@ namespace NesEmulator
 
             return 4;
         }
-
     }
 }

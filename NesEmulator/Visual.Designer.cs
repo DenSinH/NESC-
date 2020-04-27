@@ -1,6 +1,6 @@
 ﻿namespace NesEmulator
 {
-    partial class Form1
+    partial class Visual
     {
         /// <summary>
         /// Required designer variable.
@@ -30,13 +30,13 @@
         {
             this.SuspendLayout();
             // 
-            // Form1
+            // Visual
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(822, 471);
-            this.Name = "Form1";
-            this.Text = "Form1";
+            this.ClientSize = new System.Drawing.Size(256, 240);
+            this.Name = "Visual";
+            this.Text = "Visual";
             this.ResumeLayout(false);
 
         }

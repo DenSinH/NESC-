@@ -9,7 +9,7 @@ namespace NesEmulator
 
     class Program
     {
-        public static void Run()
+        public static void Run(byte[] rawBitmap)
         {
             CPU cpu = new CPU();
             cpu.Load("../../roms/nestest.nes", 0xc000 - 0x10);
@@ -28,18 +28,37 @@ namespace NesEmulator
             s.Stop();
 
             Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
+
+            while (true)
+            {
+                lock (rawBitmap)
+                {
+                    try
+                    {
+                        Random rnd = new Random();
+                        rnd.NextBytes(rawBitmap);
+                    }
+                    catch (ArgumentNullException)
+                    {
+                        Console.WriteLine("Something went wrong");
+                    }
+                }
+                Thread.Sleep(1);
+            }
+
         }
 
         [STAThread]
         static void Main()
         {
+            byte[] rawBitmap = new byte[0x100 * 0xf0 * 3];
 
-            Thread t = new Thread(new ThreadStart(Program.Run));
+            Thread t = new Thread(() => Run(rawBitmap));
             t.Start();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new Visual(rawBitmap));
         }
     }
 }

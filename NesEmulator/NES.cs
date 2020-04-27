@@ -9,7 +9,7 @@ namespace NesEmulator
     class NES
     {
         private CPU cpu;
-        private PPU ppu; // todo: make this ppu not ppumem
+        private PPU ppu;
 
         public NES()
         {
