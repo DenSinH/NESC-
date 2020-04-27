@@ -35,7 +35,7 @@ namespace NesEmulator
             this.PPUSCROLL = cpu.mem.get(0x2005);
             this.PPUADDR = cpu.mem.get(0x2006);
             this.PPUDATA = cpu.mem.get(0x2007);
-            this.OAMDATA = cpu.mem.get(0x4014);
+            this.OAMDMA = cpu.mem.get(0x4014);
 
             this.mem = new PPUMEM();
             this.oam = new PPUOAM();

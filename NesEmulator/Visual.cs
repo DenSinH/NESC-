@@ -82,10 +82,9 @@ namespace NesEmulator
                 lock (this.rawBitmap)
                 {
                     _rawBitmap = GCHandle.Alloc(this.rawBitmap, GCHandleType.Pinned);
-                    
-                }
-                this.Backbuffer = new Bitmap(width, height, width * 3,
+                    this.Backbuffer = new Bitmap(width, height, width * 3,
                                 PixelFormat.Format24bppRgb, _rawBitmap.AddrOfPinnedObject());
+                }
 
                 _rawBitmap.Free();
                 Invalidate();  // set so that updated pixels are invalidated
