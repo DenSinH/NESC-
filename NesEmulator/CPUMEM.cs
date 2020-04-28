@@ -4,8 +4,8 @@ namespace NesEmulator
 {
     class CPUMEM : Memory
     {
-        public PureByte[] pc;
-        public PureByte ac, x, y, sr, sp;
+        public byte[] pc;
+        public byte ac, x, y, sr, sp;
 
         public readonly int[] nmiVector = { 0xfffa, 0xfffb };
         public readonly int[] resetVector = { 0xfffc, 0xfffd };
@@ -13,66 +13,81 @@ namespace NesEmulator
 
         public CPUMEM()
         {
-            this.storage = new PureByte[0x10000];
+            this.storage = new byte[0x10000];
             // memory map from https://wiki.nesdev.com/w/index.php/CPU_memory_map
-            for (int i = 0; i < 0x800; i++)
+            for (int i = 0; i < 0x10000; i++)
             {
-                this.storage[i] = new PureByte();
-                this.storage[0x800 + i] = this.storage[i];
-                this.storage[0x1000 + i] = this.storage[i];
-                this.storage[0x1800 + i] = this.storage[i];
-            }
-            for (int i = 0; i < 8; i++)
-            {
-                this.storage[0x2000 + i] = new PureByte(true);
-                for (int j = 8; j < 0x1ff8; j += 8)
-                {
-                    this.storage[0x2000 + j + i] = this.storage[i];
-                }
+                this.storage[i] = 0;
             }
 
-            for (int i = 0x4000; i < 0x10000; i++)
-            {
-                this.storage[i] = new PureByte();
-            }
+            this.pc = new byte[2];
+            this.pc[0] = new byte();
+            this.pc[1] = new byte();
 
-            this.pc = new PureByte[2];
-            this.pc[0] = new PureByte();
-            this.pc[1] = new PureByte();
-
-            this.ac = new PureByte();
-            this.x = new PureByte();
-            this.y = new PureByte();
-            this.sr = new PureByte(0x24);
-            this.sp = new PureByte(0x00);
+            this.ac = 0;
+            this.x = 0;
+            this.y = 0;
+            this.sr = 0x24;
+            this.sp = 0x00;
         }
 
-        public PureByte getCurrent()
+        protected override int Map(int index)
+        {
+            if (index < 0)
+            {
+                return index;
+            } else if (index < 0x2000)
+            {
+                return index % 0x800;
+            } else if (index < 0x4000)
+            {
+                return 0x2000 + (index % 8);
+            } else
+            {
+                return index;
+            }
+        }
+
+        protected override byte GetSpecial(int index)
+        {
+            if (index == -0x100)
+            {
+                return this.ac;
+            }
+            return (byte)(-index - 0x200);
+        }
+
+        protected override void SetSpecial(int index, byte value)
+        {
+            if (index == -0x100)
+            {
+                this.ac = value;
+            } else
+            {
+                throw new Exception("Unknown special index code for CPU memory: " + index);
+            }
+        }
+
+        public byte getCurrent()
         {
             return this.storage[this.getPc()];
         }
 
         public int getPc()
         {
-            return 0x100 * this.pc[0].unsigned() + this.pc[1].unsigned();
+            return 0x100 * this.pc[0] + this.pc[1];
         }
 
-        public void setPc(int ll, int hh)
+        public void setPc(byte ll, byte hh)
         {
-            this.pc[0].set(hh);
-            this.pc[1].set(ll);
+            this.pc[0] = hh;
+            this.pc[1] = ll;
         }
 
-        public void setPc(PureByte ll, PureByte hh)
+        public void setNZ(byte val)
         {
-            this.pc[0].set(hh);
-            this.pc[1].set(ll);
-        }
-
-        public void setNZ(PureByte val)
-        {
-            this.setFlag('N', (byte)(val.negative() ? 1 : 0));
-            this.setFlag('Z', (byte)(val.zero() ? 1 : 0));
+            this.setFlag('N', (byte)(val >> 7));
+            this.setFlag('Z', (byte)((val == 0) ? 1 : 0));
         }
 
         public void setFlag(char flag, byte value)
@@ -84,13 +99,13 @@ namespace NesEmulator
 
             switch (flag)
             {
-                case 'N': this.sr.setBit(7, value); break;
-                case 'V': this.sr.setBit(6, value); break;
-                case 'B': this.sr.setBit(4, value); break;
-                case 'D': this.sr.setBit(3, value); break;
-                case 'I': this.sr.setBit(2, value); break;
-                case 'Z': this.sr.setBit(1, value); break;
-                case 'C': this.sr.setBit(0, value); break;
+                case 'N': this.sr = (byte)((this.sr & 0b0111_1111) | value * 0b1000_0000); break;
+                case 'V': this.sr = (byte)((this.sr & 0b1011_1111) | value * 0b0100_0000); break;
+                case 'B': this.sr = (byte)((this.sr & 0b1110_1111) | value * 0b0001_0000); break;
+                case 'D': this.sr = (byte)((this.sr & 0b1111_0111) | value * 0b0000_1000); break;
+                case 'I': this.sr = (byte)((this.sr & 0b1111_1011) | value * 0b0000_0100); break;
+                case 'Z': this.sr = (byte)((this.sr & 0b1111_1101) | value * 0b0000_0010); break;
+                case 'C': this.sr = (byte)((this.sr & 0b1111_1110) | value * 0b0000_0001); break;
                 default : throw new Exception("Unknown flag: " + flag);
             }
         }
@@ -99,24 +114,24 @@ namespace NesEmulator
         {
             switch (flag)
             {
-                case 'N': return this.sr.getBit(7);
-                case 'V': return this.sr.getBit(6);
-                case 'B': return this.sr.getBit(4);
-                case 'D': return this.sr.getBit(3);
-                case 'I': return this.sr.getBit(2);
-                case 'Z': return this.sr.getBit(1);
-                case 'C': return this.sr.getBit(0);
+                case 'N': return (byte)((this.sr & 0b1000_0000) >> 7);
+                case 'V': return (byte)((this.sr & 0b0100_0000) >> 6);
+                case 'B': return (byte)((this.sr & 0b0001_0000) >> 4);
+                case 'D': return (byte)((this.sr & 0b0000_1000) >> 3);
+                case 'I': return (byte)((this.sr & 0b0000_0100) >> 2);
+                case 'Z': return (byte)((this.sr & 0b0000_0010) >> 1);
+                case 'C': return (byte)((this.sr & 0b0000_0001));
                 default : throw new Exception("Unknown flag: "+ flag);
             };
         }
 
         public void incrPc(int amt)
         {
-            int c = (this.pc[1].unsigned() + amt > 0xff) ? 1 : 0;
-            this.pc[1].add(amt);
+            int c = (this.pc[1] + amt > 0xff) ? 1 : 0;
+            this.pc[1] += (byte)amt;
             if (c == 1)
             {
-                this.pc[0].add(c);
+                this.pc[0]++;
             }
         }
 
@@ -125,45 +140,24 @@ namespace NesEmulator
             this.incrPc(1);
         }
 
-        public void reset()
+        public void push(byte value)
         {
-            this.setPc(
-                    this.storage[resetVector[0]],
-                    this.storage[resetVector[1]]
-            );
-            this.sp.set(0xff);
-            // todo: Other reset actions
-        }
-
-        public void push(PureByte value)
-        {
-            if (this.sp.unsigned() == 0)
+            if (this.sp == 0)
             {
                 Console.Error.WriteLine("Cannot push onto full stack");
             }
-            this.storage[0x100 + this.sp.unsigned()].set(value);
-            this.sp.decr();
+            this.storage[0x100 + this.sp] = value;
+            this.sp--;
         }
 
-        public void push(int value)
+        public byte pull()
         {
-            if (this.sp.unsigned() == 0)
-            {
-                Console.Error.WriteLine("Cannot push onto full stack");
-            }
-            this.storage[0x100 + this.sp.unsigned()].set(value);
-            this.sp.decr();
-        }
-
-        public PureByte pull()
-        {
-            if (this.sp.unsigned() >= 0xff)
+            if (this.sp == 0xff)
             {
                 Console.Error.WriteLine("Cannot pull from empty stack");
             }
-            this.sp.incr();
-            return this.storage[0x100 + this.sp.unsigned()];
+            this.sp++;
+            return this.storage[0x100 + this.sp];
         }
-
     }
 }

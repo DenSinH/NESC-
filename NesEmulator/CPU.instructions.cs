@@ -30,10 +30,10 @@ namespace NesEmulator
                     (indirect),Y  ADC (oper),Y  71    2     5*
             */
 
-            int unsigned_result = this.mem.ac.unsigned() + this.oper.unsigned() + this.mem.getFlag('C');
-            int signed_result = this.mem.ac.signed() + this.oper.signed() + this.mem.getFlag('C');
+            int unsigned_result = this.mem.ac + this.mem[this.oper] + this.mem.getFlag('C');
+            int signed_result = unchecked((sbyte)this.mem.ac + (sbyte)this.mem[this.oper]) + this.mem.getFlag('C');
 
-            this.mem.ac.set(unsigned_result);
+            this.mem.ac = (byte)(unsigned_result);
 
             this.mem.setNZ(this.mem.ac);
             this.mem.setFlag('C', (byte)(unsigned_result > 0xff ? 1 : 0));
@@ -72,7 +72,7 @@ namespace NesEmulator
                     (indirect),Y  AND (oper),Y  31    2     5*
             */
 
-            this.mem.ac.and(this.oper);
+            this.mem.ac &= this.mem[this.oper];
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -105,9 +105,9 @@ namespace NesEmulator
                     absolute,X    ASL oper,X    1E    3     7;
             */
 
-            this.mem.setFlag('C', (byte)(this.oper.unsigned() >= 128 ? 1 : 0));
-            this.oper.lshift();
-            this.mem.setNZ(this.oper);
+            this.mem.setFlag('C', (byte)(this.mem[this.oper] >= 128 ? 1 : 0));
+            this.mem[this.oper] <<= 1;
+            this.mem.setNZ(this.mem[this.oper]);
 
             switch (mode)
             {
@@ -213,9 +213,9 @@ namespace NesEmulator
                     absolute      BIT oper      2C    3     4;
             */
 
-            this.mem.setFlag('N', this.oper.getBit(7));
-            this.mem.setFlag('V', this.oper.getBit(6));
-            this.mem.setFlag('Z', (byte)((this.oper.unsigned() & this.mem.ac.unsigned()) == 0 ? 1 : 0));
+            this.mem.setFlag('N', (byte)((this.mem[this.oper] & 0b1000_0000) >> 7));
+            this.mem.setFlag('V', (byte)((this.mem[this.oper] & 0b0100_0000) >> 6));
+            this.mem.setFlag('Z', (byte)((this.mem[this.oper] & this.mem.ac) == 0 ? 1 : 0));
 
             switch (mode)
             {
@@ -317,8 +317,8 @@ namespace NesEmulator
             this.mem.setFlag('I', (byte)1);
             this.mem.push(this.mem.pc[0]);
             this.mem.push(this.mem.pc[1]);
-            this.mem.push(this.mem.sr.unsigned() | 0b00110000);
-            this.mem.setPc(this.mem.get(this.mem.irqVector[0]), this.mem.get(this.mem.irqVector[1]));
+            this.mem.push((byte)(this.mem.sr | 0b0011_0000));
+            this.mem.setPc(this.mem[this.mem.irqVector[0]], this.mem[this.mem.irqVector[1]]);
 
             if (mode == 5)
             {
@@ -477,9 +477,9 @@ namespace NesEmulator
                     (indirect),Y  CMP (oper),Y  D1    2     5*
             */
 
-            this.mem.setFlag('C', (byte)(this.mem.ac.unsigned() >= this.oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('Z', (byte)(this.mem.ac.unsigned() == this.oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('N', (new PureByte(this.mem.ac.unsigned() - this.oper.unsigned())).getBit(7));
+            this.mem.setFlag('C', (byte)(this.mem.ac >= this.mem[this.oper] ? 1 : 0));
+            this.mem.setFlag('Z', (byte)(this.mem.ac == this.mem[this.oper] ? 1 : 0));
+            this.mem.setFlag('N', (byte)(((byte)(this.mem.ac - this.mem[this.oper]) >= 128) ? 1 : 0));
 
             switch (mode)
             {
@@ -509,9 +509,9 @@ namespace NesEmulator
                     absolute      CPX oper      EC    3     4;
             */
 
-            this.mem.setFlag('C', (byte)(this.mem.x.unsigned() >= this.oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('Z', (byte)(this.mem.x.unsigned() == this.oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('N', (new PureByte(this.mem.x.unsigned() - this.oper.unsigned())).getBit(7));
+            this.mem.setFlag('C', (byte)(this.mem.x >= this.mem[this.oper] ? 1 : 0));
+            this.mem.setFlag('Z', (byte)(this.mem.x == this.mem[this.oper] ? 1 : 0));
+            this.mem.setFlag('N', (byte)(((byte)(this.mem.x - this.mem[this.oper]) >= 128) ? 1 : 0));
 
             switch (mode)
             {
@@ -535,9 +535,9 @@ namespace NesEmulator
                     absolute      CPY oper      CC    3     4;
             */
 
-            this.mem.setFlag('C', (byte)(this.mem.y.unsigned() >= this.oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('Z', (byte)(this.mem.y.unsigned() == this.oper.unsigned() ? 1 : 0));
-            this.mem.setFlag('N', (new PureByte(this.mem.y.unsigned() - this.oper.unsigned())).getBit(7));
+            this.mem.setFlag('C', (byte)(this.mem.y >= this.mem[this.oper] ? 1 : 0));
+            this.mem.setFlag('Z', (byte)(this.mem.y == this.mem[this.oper] ? 1 : 0));
+            this.mem.setFlag('N', (byte)(((byte)(this.mem.y - this.mem[this.oper]) >= 128) ? 1 : 0));
 
             switch (mode)
             {
@@ -562,8 +562,8 @@ namespace NesEmulator
                     absolute,X    DEC oper,X    DE    3     7;
             */
 
-            this.oper.decr();
-            this.mem.setNZ(this.oper);
+            this.mem[this.oper]--;
+            this.mem.setNZ(this.mem[this.oper]);
 
             switch (mode)
             {
@@ -587,7 +587,7 @@ namespace NesEmulator
                     implied       DEC           CA    1     2;
             */
 
-            this.mem.x.decr();
+            this.mem.x--;
             this.mem.setNZ(this.mem.x);
 
             if (mode == 5)
@@ -608,7 +608,7 @@ namespace NesEmulator
                     implied       DEC           88    1     2;
             */
 
-            this.mem.y.decr();
+            this.mem.y--;
             this.mem.setNZ(this.mem.y);
 
             if (mode == 5)
@@ -636,7 +636,7 @@ namespace NesEmulator
                     (indirect),Y  EOR (oper),Y  51    2     5*
             */
 
-            this.mem.ac.xor(this.oper);
+            this.mem.ac ^= this.mem[this.oper];
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -668,8 +668,8 @@ namespace NesEmulator
                     absolute,X    INC oper,X    FE    3     7;
             */
 
-            this.oper.incr();
-            this.mem.setNZ(this.oper);
+            this.mem[this.oper]++;
+            this.mem.setNZ(this.mem[this.oper]);
 
             switch (mode)
             {
@@ -693,7 +693,7 @@ namespace NesEmulator
                     implied       INX           E8    1     2;
             */
 
-            this.mem.x.incr();
+            this.mem.x++;
             this.mem.setNZ(this.mem.x);
 
             if (mode == 5)
@@ -714,7 +714,7 @@ namespace NesEmulator
                     implied       INY           C8    1     2;
             */
 
-            this.mem.y.incr();
+            this.mem.y++;
             this.mem.setNZ(this.mem.y);
 
             if (mode == 5)
@@ -743,7 +743,7 @@ namespace NesEmulator
                     (indirect),Y  LDA (oper),Y  B1    2     5*
             */
 
-            this.mem.ac.set(this.oper);
+            this.mem.ac = this.mem[this.oper];
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -776,7 +776,7 @@ namespace NesEmulator
                     absolute,Y    LDX oper,Y    BE    3     4*
             */
 
-            this.mem.x.set(this.oper);
+            this.mem.x = this.mem[this.oper];
             this.mem.setNZ(this.mem.x);
 
             switch (mode)
@@ -806,7 +806,7 @@ namespace NesEmulator
                     absolute,X    LDY oper,X    BC    3     4*
             */
 
-            this.mem.y.set(this.oper);
+            this.mem.y = this.mem[this.oper];
             this.mem.setNZ(this.mem.y);
 
             switch (mode)
@@ -835,9 +835,9 @@ namespace NesEmulator
                 absolute,X    LSR oper,X    5E    3     7;
             */
 
-            byte c = this.oper.getBit(0);
-            this.oper.rshift();
-            this.mem.setNZ(this.oper);
+            byte c = (byte)(this.mem[this.oper] & 0x01);
+            this.mem[this.oper] >>= 1;
+            this.mem.setNZ(this.mem[this.oper]);
             this.mem.setFlag('C', c);
 
             switch (mode)
@@ -895,7 +895,7 @@ namespace NesEmulator
                     (indirect),Y  ORA (oper),Y  11    2     5*
             */
 
-            this.mem.ac.or(this.oper);
+            this.mem.ac |= this.mem[this.oper];
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -944,7 +944,7 @@ namespace NesEmulator
                     implied       PHP           08    1     3;
             */
 
-            this.mem.push(this.mem.sr.unsigned() | 0b00110000);
+            this.mem.push((byte)(this.mem.sr | 0b00110000));
 
             if (mode == 5)
             {
@@ -964,7 +964,7 @@ namespace NesEmulator
                     implied       PLA           68    1     4;
             */
 
-            this.mem.ac.set(this.mem.pull());
+            this.mem.ac = this.mem.pull();
             this.mem.setNZ(this.mem.ac);
 
             if (mode == 5)
@@ -985,7 +985,7 @@ namespace NesEmulator
                     implied       PLP           28    1     4;
             */
 
-            this.mem.sr.set((this.mem.pull().unsigned() | 0x20) & 0xef);
+            this.mem.sr = (byte)((this.mem.pull() | 0x20) & 0xef);
 
             if (mode == 5)
             {
@@ -1008,9 +1008,12 @@ namespace NesEmulator
                     absolute      ROL oper      2E    3     6;
                     absolute,X    ROL oper,X    3E    3     7;
             */
-            
-            this.mem.setFlag('C', this.oper.rol(this.mem.getFlag('C')));
-            this.mem.setNZ(this.oper);
+
+            byte c = this.mem.getFlag('C');
+            this.mem.setFlag('C', (byte)(this.mem[this.oper] >> 7));
+            this.mem[this.oper] <<= 1;
+            this.mem[this.oper] += c;
+            this.mem.setNZ(this.mem[this.oper]);
 
             switch (mode)
             {
@@ -1039,9 +1042,11 @@ namespace NesEmulator
                     absolute,X    ROR oper,X    7E    3     7;
             */
 
-            byte c = this.oper.ror(this.mem.getFlag('C'));
+            byte c = (byte)(this.mem[this.oper] & 0x01);
+            this.mem[this.oper] >>= 1;
+            this.mem[this.oper] = (byte)(this.mem[this.oper] + (this.mem.getFlag('C') << 7));
             this.mem.setFlag('C', c);
-            this.mem.setNZ(this.oper);
+            this.mem.setNZ(this.mem[this.oper]);
 
             switch (mode)
             {
@@ -1066,9 +1071,9 @@ namespace NesEmulator
                     implied       RTI           40    1     6;
                 */
 
-            this.mem.sr.set((this.mem.pull().unsigned() | 0x20) & 0xef);
-            this.mem.pc[1].set(this.mem.pull());
-            this.mem.pc[0].set(this.mem.pull());
+            this.mem.sr = (byte)((this.mem.pull() | 0x20) & 0xef);
+            this.mem.pc[1] = this.mem.pull();
+            this.mem.pc[0] =this.mem.pull();
 
             if (mode == 5)
             {
@@ -1089,8 +1094,8 @@ namespace NesEmulator
                     implied       RTS           60    1     6;
             */
 
-            this.mem.pc[1].set(this.mem.pull());
-            this.mem.pc[0].set(this.mem.pull());
+            this.mem.pc[1] = this.mem.pull();
+            this.mem.pc[0] = this.mem.pull();
 
             this.mem.incrPc();
 
@@ -1118,7 +1123,7 @@ namespace NesEmulator
                     (indirect,X)  SBC (oper,X)  E1    2     6;
                     (indirect),Y  SBC (oper),Y  F1    2     5*
             */
-            this.oper = new PureByte(oper.unsigned() ^ 0xff);
+            this.oper =  - (this.mem[this.oper] ^ 0xff);
             this.ADC(mode);
 
             switch (mode)
@@ -1214,7 +1219,7 @@ namespace NesEmulator
                     (indirect),Y  STA (oper),Y  91    2     6;
             */
 
-            this.oper.set(this.mem.ac);
+            this.mem[this.oper] = this.mem.ac;
 
             switch (mode)
             {
@@ -1243,7 +1248,7 @@ namespace NesEmulator
                     absolute      STX oper      8E    3     4;
             */
 
-            this.oper.set(this.mem.x);
+            this.mem[this.oper] = this.mem.x;
 
             switch (mode)
             {
@@ -1268,7 +1273,7 @@ namespace NesEmulator
                     absolute      STY oper      8C    3     4;
             */
 
-            this.oper.set(this.mem.y);
+            this.mem[this.oper] = this.mem.y;
 
             switch (mode)
             {
@@ -1290,7 +1295,7 @@ namespace NesEmulator
                     implied       TAX           AA    1     2;
             */
 
-            this.mem.x.set(this.mem.ac);
+            this.mem.x = this.mem.ac;
             this.mem.setNZ(this.mem.x);
 
             switch (mode)
@@ -1312,7 +1317,7 @@ namespace NesEmulator
                     implied       TAY           A8    1     2;
             */
 
-            this.mem.y.set(this.mem.ac);
+            this.mem.y = this.mem.ac;
             this.mem.setNZ(this.mem.y);
 
             if (mode == 5)
@@ -1333,7 +1338,7 @@ namespace NesEmulator
                     implied       TSX           BA    1     2;
             */
 
-            this.mem.x.set(this.mem.sp);
+            this.mem.x = this.mem.sp;
             this.mem.setNZ(this.mem.x);
 
             if (mode == 5)
@@ -1354,7 +1359,7 @@ namespace NesEmulator
                     implied       TXA           8A    1     2;
             */
 
-            this.mem.ac.set(this.mem.x);
+            this.mem.ac = this.mem.x;
             this.mem.setNZ(this.mem.ac);
 
             switch (mode)
@@ -1376,7 +1381,7 @@ namespace NesEmulator
                     implied       TXS           9A    1     2;
             */
 
-            this.mem.sp.set(this.mem.x);
+            this.mem.sp = this.mem.x;
 
             if (mode == 5)
             {
@@ -1396,7 +1401,7 @@ namespace NesEmulator
                     implied       TYA           98    1     2;
             */
 
-            this.mem.ac.set(this.mem.y);
+            this.mem.ac = this.mem.y;
             this.mem.setNZ(this.mem.ac);
 
             if (mode == 5)
@@ -1616,7 +1621,7 @@ namespace NesEmulator
             PLA
             */
 
-            oper.set(this.mem.ac.get() & this.mem.x.get());
+            this.mem[this.oper] = (byte)(this.mem.ac & this.mem.x);
 
             switch (mode)
             {
@@ -1783,10 +1788,10 @@ namespace NesEmulator
             */
 
             this.AND(13);
-            this.oper = this.mem.ac;
+            this.oper = -0x100;
             this.LSR(0);
 
-            if (4.Equals(mode))
+            if (4 == mode)
             {
                 return 2;
             }
@@ -1815,10 +1820,10 @@ namespace NesEmulator
             */
 
             this.AND(13);
-            this.oper = this.mem.ac;
+            this.oper = -0x100;
             this.ROR(0);
 
-            if (4.Equals(mode))
+            if (4 == mode)
             {
                 return 2;
             }
@@ -1845,12 +1850,11 @@ namespace NesEmulator
             TXA
             AND #$44;
             */
+            
+            this.TXA(5);
+            this.AND(4);
 
-            this.oper = new PureByte();
-            this.TXA(13);
-            this.AND(13);
-
-            if (4.Equals(mode))
+            if (4 == mode)
             {
                 return 2;
             }
@@ -1879,13 +1883,11 @@ namespace NesEmulator
             TAX
             */
 
-            this.oper = new PureByte(0xee);
-            this.ORA(4);
-            this.AND(13);
-            this.oper = new PureByte();
-            this.TAX(13);
+            this.mem.ac |= 0xee;
+            this.mem.ac &= (byte)(-this.oper - 0x200);
+            this.mem.x = this.mem.ac;
 
-            if (4.Equals(mode))
+            if (4 == mode)
             {
                 return 2;
             }

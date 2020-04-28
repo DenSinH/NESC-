@@ -17,20 +17,20 @@ namespace NesEmulator
         private Func<byte, int> method;
         public byte mode;
         /*
-         Modes:
-        0: A		....	Accumulator	 	OPC A	 	operand is AC (implied single byte instruction)
-        1: abs		....	absolute	 	OPC $LLHH	 	operand is address $HHLL *
-        2: abs,X	....	absolute, X-indexed	 	OPC $LLHH,X	 	operand is address; effective address is address incremented by X with carry **
-        3: abs,Y	....	absolute, Y-indexed	 	OPC $LLHH,Y	 	operand is address; effective address is address incremented by Y with carry **
-        4: #		....	immediate	 	OPC #$BB	 	operand is byte BB
-        5: impl	....	implied	 	OPC	 	operand implied
-        6: ind	    ....	indirect	 	OPC ($LLHH)	 	operand is address; effective address is contents of word at address: C.w($HHLL)
-        7: X,ind	....	X-indexed, indirect	 	OPC ($LL,X)	 	operand is zeropage address; effective address is word in (LL + X, LL + X + 1), inc. without carry: C.w($00LL + X)
-        8: ind,Y	....	indirect, Y-indexed	 	OPC ($LL),Y	 	operand is zeropage address; effective address is word in (LL, LL + 1) incremented by Y with carry: C.w($00LL) + Y
-        9: rel		....	relative	 	OPC $BB	 	branch target is PC + signed offset BB ***
-        10: zpg		....	zeropage	 	OPC $LL	 	operand is zeropage address (hi-byte is zero, address = $00LL)
-        11: zpg,X	....	zeropage, X-indexed	 	OPC $LL,X	 	operand is zeropage address; effective address is address incremented by X without carry **
-        12: zpg,Y	....	zeropage, Y-indexed	 	OPC $LL,Y	 	operand is zeropage address; effective address is address incremented by Y without carry **
+        Modes:
+        0: A        ....	Accumulator	 	        OPC A	 	    operand is AC (implied single byte instruction)
+        1: abs      ....	absolute	 	        OPC $LLHH	 	operand is address $HHLL *
+        2: abs,X    ....	absolute, X-indexed	 	OPC $LLHH,X	 	operand is address; effective address is address incremented by X with carry **
+        3: abs,Y    ....	absolute, Y-indexed	 	OPC $LLHH,Y	 	operand is address; effective address is address incremented by Y with carry **
+        4: #	    ....	immediate	 	        OPC #$BB	 	operand is byte BB
+        5: impl	    ....	implied	 	            OPC	 	        operand implied
+        6: ind	    ....	indirect	 	        OPC ($LLHH)	 	operand is address; effective address is contents of word at address: C.w($HHLL)
+        7: X,ind    ....	X-indexed, indirect	 	OPC ($LL,X)	 	operand is zeropage address; effective address is word in (LL + X, LL + X + 1), inc. without carry: C.w($00LL + X)
+        8: ind,Y    ....	indirect, Y-indexed	 	OPC ($LL),Y	 	operand is zeropage address; effective address is word in (LL, LL + 1) incremented by Y with carry: C.w($00LL) + Y
+        9: rel      ....	relative	 	        OPC $BB	 	    branch target is PC + signed offset BB ***
+        10: zpg     ....	zeropage	 	        OPC $LL	 	    operand is zeropage address (hi-byte is zero, address = $00LL)
+        11: zpg,X   ....	zeropage, X-indexed	 	OPC $LL,X	 	operand is zeropage address; effective address is address incremented by X without carry **
+        12: zpg,Y   ....	zeropage, Y-indexed	 	OPC $LL,Y	 	operand is zeropage address; effective address is address incremented by Y without carry **
         
         13: internal
         */
@@ -62,7 +62,7 @@ namespace NesEmulator
         private int cycle;
         private bool kil = false;
 
-        private PureByte oper;
+        private int oper;
         private byte pageChange;
 
         private InstructionCaller[] instructions;
@@ -197,16 +197,16 @@ namespace NesEmulator
             // load rom into memory
             using (FileStream fs = File.OpenRead(filename))
             {
-                int current;
+                byte current;
                 for (int i = start; i < 0x10000; i++)
                 {
-                    current = fs.ReadByte();
+                    current = (byte)fs.ReadByte();
                     if (current == -1)
                     {
                         break;
                     }
 
-                    this.mem.set(i, current);
+                    this.mem[i] = current;
                 }
             }
             this.log(filename + " loaded");
@@ -220,14 +220,30 @@ namespace NesEmulator
 
         public void RESET()
         {
-            this.mem.push(this.mem.get(0x100));
-            this.mem.push(this.mem.get(0x1ff));
-            this.mem.push(this.mem.get(0x1fe));
+            this.mem.push(this.mem[0x100]);
+            this.mem.push(this.mem[0x1ff]);
+            this.mem.push(this.mem[0x1fe]);
             this.mem.setPc(
-                this.mem.get(this.mem.resetVector[0]),
-                this.mem.get(this.mem.resetVector[1])
+                this.mem[this.mem.resetVector[0]],
+                this.mem[this.mem.resetVector[1]]
                 );
             this.cycle = 7;
+        }
+
+        public void IRQ()
+        {
+            this.mem.push(this.mem.pc[0]);
+            this.mem.push(this.mem.pc[1]);
+            this.mem.push((byte)((this.mem.sr & 0b1110_1111) + 0b0010_0000));
+            this.mem.setPc(this.mem[this.mem.irqVector[0]], this.mem[this.mem.irqVector[1]]);
+        }
+
+        public void NMI()
+        {
+            this.mem.push(this.mem.pc[0]);
+            this.mem.push(this.mem.pc[1]);
+            this.mem.push((byte)((this.mem.sr & 0b1110_1111) + 0b0010_0000));
+            this.mem.setPc(this.mem[this.mem.nmiVector[0]], this.mem[this.mem.nmiVector[1]]);
         }
 
         public int GetCycle()
@@ -237,8 +253,8 @@ namespace NesEmulator
 
         public void SetPc(int val)
         {
-            this.mem.pc[0].set(val / 0x100);
-            this.mem.pc[1].set(val % 0x100);
+            this.mem.pc[0] = (byte)(val / 0x100);
+            this.mem.pc[1] = (byte)(val % 0x100);
         }
 
         public void Run()
@@ -251,7 +267,7 @@ namespace NesEmulator
 
         public int step()
         {
-            int opcode = this.mem.getCurrent().unsigned();
+            int opcode = this.mem.getCurrent();
             this.mem.incrPc();
 
             /*
@@ -270,9 +286,9 @@ namespace NesEmulator
                     absolute      JMP oper      4C    3     3
                     indirect      JMP (oper)    6C    3     5
                 */
-                PureByte ll = this.mem.getCurrent();
+                byte ll = this.mem.getCurrent();
                 this.mem.incrPc();
-                PureByte hh = this.mem.getCurrent();
+                byte hh = this.mem.getCurrent();
                 this.mem.incrPc();
 
                 switch (opcode)
@@ -286,8 +302,8 @@ namespace NesEmulator
                         {
                             // indirect wraps around with the lower byte. This is a glitch/feature in the MOS6502 processor
                             this.mem.setPc(
-                                    this.mem.get(hh.unsigned() * 0x100 + ll.unsigned()),
-                                    this.mem.get(hh.unsigned() * 0x100 + ((ll.unsigned() + 1) % 0x100))
+                                    this.mem[hh * 0x100 + ll],
+                                    this.mem[hh * 0x100 + ((ll + 1) % 0x100)]
                             );
                             return 5;
                         }
@@ -305,13 +321,13 @@ namespace NesEmulator
                     --------------------------------------------
                     absolute      JSR oper      20    3     6
                 */
-                byte v = (byte)(this.mem.pc[1].unsigned() + 1 > 0xff ? 1 : 0);
-                this.mem.push(this.mem.pc[0].unsigned() + v);
-                this.mem.push(this.mem.pc[1].unsigned() + 1);
+                byte v = (byte)(this.mem.pc[1] + 1 > 0xff ? 1 : 0);
+                this.mem.push((byte)(this.mem.pc[0] + v));
+                this.mem.push((byte)(this.mem.pc[1] + 1));
 
-                PureByte ll = this.mem.getCurrent();
+                byte ll = this.mem.getCurrent();
                 this.mem.incrPc();
-                PureByte hh = this.mem.getCurrent();
+                byte hh = this.mem.getCurrent();
                 this.mem.setPc(ll, hh);
                 return 6;
             }
@@ -328,17 +344,17 @@ namespace NesEmulator
             {
                 this.log(
                     string.Format(
-                        "    {0}  {1:x2} {2}: {3,5}\t\t{4}     A:{5} X:{6} Y:{7} P:{8} SP:{9}        CYC:{10}",
+                        "    {0}  {1:x2} {2}: {3,5}\t\t{4}     A:{5:x2} X:{6:x2} Y:{7:x2} P:{8:x2} SP:{9:x2}        CYC:{10}",
                         (this.mem.getPc() - 1).ToString("x2"),
                         opcode,
                         ic.getName(), // instruction,
                         ic.mode, // mode,
-                        this.mem.getCurrent().unsigned().ToString("x2"),
-                        this.mem.ac.hex(),
-                        this.mem.x.hex(),
-                        this.mem.y.hex(),
-                        this.mem.sr.hex(),
-                        this.mem.sp.hex(),
+                        this.mem.getCurrent().ToString("x2"),
+                        this.mem.ac,
+                        this.mem.x,
+                        this.mem.y,
+                        this.mem.sr,
+                        this.mem.sp,
                         this.cycle
                     )
                 );
@@ -346,29 +362,18 @@ namespace NesEmulator
 
             this.getOper(ic.mode);
 
-            if (this.oper.shared)
-            {
-                lock (this.oper)
-                {
-                    return ic.call();
-                }
-            }
             return ic.call();
         }
 
         private void getOper(int mode)
         {
-            PureByte ll;
-            PureByte hh;
+            byte ll;
+            byte hh;
 
             switch (mode)
             {
-                case 5:  // impl
-                    this.oper = new PureByte();
-                    this.pageChange = (byte)0;
-                    return;
                 case 0:  // A
-                    this.oper = this.mem.ac;
+                    this.oper = -0x100;
                     this.pageChange = (byte)0;
                     return;
                 case 1:  // abs
@@ -377,7 +382,7 @@ namespace NesEmulator
                     hh = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    this.oper = this.mem.get(ll, hh);
+                    this.oper = 0x100 * hh + ll;
                     this.pageChange = (byte)0;
                     return;
 
@@ -387,8 +392,8 @@ namespace NesEmulator
                     hh = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    this.oper = this.mem.get((hh.unsigned() * 0x100 + ll.unsigned() + this.mem.x.unsigned()) % 0x10000);
-                    this.pageChange = (byte)(ll.unsigned() + this.mem.x.unsigned() > 0xff ? 1 : 0);
+                    this.oper = (hh * 0x100 + ll + this.mem.x) % 0x10000;
+                    this.pageChange = (byte)(ll + this.mem.x > 0xff ? 1 : 0);
                     return;
 
                 case 3:  // abs,Y
@@ -397,25 +402,30 @@ namespace NesEmulator
                     hh = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    this.oper = this.mem.get((hh.unsigned() * 0x100 + ll.unsigned() + this.mem.y.unsigned()) % 0x10000);
-                    this.pageChange = (byte)(ll.unsigned() + this.mem.y.unsigned() > 0xff ? 1 : 0);
+                    this.oper = (hh * 0x100 + ll + this.mem.y) % 0x10000;
+                    this.pageChange = (byte)(ll + this.mem.y > 0xff ? 1 : 0);
                     return;
 
                 case 4:  // #
-                    this.oper = this.mem.getCurrent();
+                    this.oper = -0x200 - this.mem.getCurrent();
                     this.mem.incrPc();
 
                     this.pageChange = (byte)0;
                     return;
 
+                case 5:  // impl
+                    this.oper = -1;
+                    this.pageChange = (byte)0;
+                    return;
+
+                case 6:  // ind, only used by JMP
+                    break;
+
                 case 7:  // X,ind
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    this.oper = this.mem.get(
-                                    this.mem.get((ll.unsigned() + this.mem.x.unsigned()) % 0x100),
-                                    this.mem.get((ll.unsigned() + this.mem.x.unsigned() + 1) % 0x100)
-                            );
+                    this.oper = this.mem[(ll + this.mem.x) % 0x100] + 0x100 * this.mem[(ll + this.mem.x + 1) % 0x100];
                     this.pageChange = (byte)0;
                     return;
 
@@ -423,12 +433,11 @@ namespace NesEmulator
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    int effective_low = this.mem.get(ll.unsigned()).unsigned();
-                    int effective_high = this.mem.get((ll.unsigned() + 1) % 0x100).unsigned() * 0x100;
-                    int effective = (effective_high + effective_low + this.mem.y.unsigned()) % 0x10000;
-
-                    this.oper = this.mem.get(effective);
-                    this.pageChange = (byte)(effective_low + this.mem.y.unsigned() > 0xff ? 1 : 0);
+                    int effective_low = this.mem[ll];
+                    int effective_high = this.mem[(ll + 1) % 0x100] * 0x100;
+                    this.oper = (effective_high + effective_low + this.mem.y) % 0x10000;
+                    
+                    this.pageChange = (byte)(effective_low + this.mem.y > 0xff ? 1 : 0);
                     return;
 
                 case 9:  // rel
@@ -442,7 +451,7 @@ namespace NesEmulator
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    this.oper = this.mem.get(ll.unsigned());
+                    this.oper = ll;
                     this.pageChange = (byte)0;
                     return;
 
@@ -450,7 +459,7 @@ namespace NesEmulator
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    this.oper = this.mem.get((ll.unsigned() + this.mem.x.unsigned()) % 0x100);
+                    this.oper = (ll + this.mem.x) % 0x100;
                     this.pageChange = (byte)0;
                     return;
 
@@ -458,7 +467,7 @@ namespace NesEmulator
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
-                    this.oper = this.mem.get((ll.unsigned() + this.mem.y.unsigned()) % 0x100);
+                    this.oper = (ll + this.mem.y) % 0x100;
                     this.pageChange = (byte)0;
                     return;
 
@@ -469,7 +478,7 @@ namespace NesEmulator
 
         private int branch()
         {
-            int target = this.mem.pc[1].unsigned() + this.oper.signed();
+            int target = this.mem.pc[1] + unchecked((sbyte)this.oper);
             int c = 0;
             if (target > 0xff)
             {
@@ -480,10 +489,13 @@ namespace NesEmulator
                 c = -1;
             }
 
-            this.mem.pc[1].add(this.oper.signed());
-            if (c != 0)
+            this.mem.pc[1] = (byte)target;
+            if (c == 1)
             {
-                this.mem.pc[0].add(c);
+                this.mem.pc[0]++;
+            } else if (c == -1)
+            {
+                this.mem.pc[0]--;
             }
 
             return c;

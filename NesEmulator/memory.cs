@@ -2,26 +2,47 @@
 {
     abstract class Memory
     {
-        protected PureByte[] storage;
+        protected byte[] storage;
 
-        public PureByte get(int item)
+        protected abstract int Map(int index);
+
+        // Can provide special indices to set or get registers
+        protected abstract byte GetSpecial(int index);
+
+        protected abstract void SetSpecial(int index, byte value);
+
+        public byte this[int index]
         {
-            return this.storage[item];
+            get
+            {
+                if (index >= 0)
+                {
+                    return this.storage[this.Map(index)];
+                }
+                return this.GetSpecial(index);
+            }
+            set
+            {
+                if (index >= 0)
+                {
+                    this.storage[this.Map(index)] = value;
+                } else
+                {
+                    this.SetSpecial(index, value);
+                }
+            }
         }
 
-        public PureByte get(PureByte ll, PureByte hh)
+        public byte this[byte ll, byte hh]
         {
-            return this.storage[0x100 * hh.unsigned() + ll.unsigned()];
-        }
-
-        public void set(int index, PureByte value)
-        {
-            this.storage[index].set(value);
-        }
-
-        public void set(int index, int value)
-        {
-            this.storage[index].set(value);
+            get
+            {
+                return this.storage[this.Map(0x100 * hh + ll)];
+            }
+            set
+            {
+                this.storage[this.Map(0x100 * hh + ll)] = value;;
+            }
         }
     }
 }

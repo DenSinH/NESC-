@@ -67,7 +67,6 @@
     <Compile Include="PPU.cs" />
     <Compile Include="PPUMEM.cs" />
     <Compile Include="PPUOAM.cs" />
-    <Compile Include="PureByte.cs" />
     <Compile Include="CPU.cs" />
     <Compile Include="CPUMEM.cs" />
     <Compile Include="Visual.cs">
