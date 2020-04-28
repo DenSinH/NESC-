@@ -14,10 +14,28 @@ namespace NesEmulator
     {
         // wrapper for an instruction with mode
 
-        private Func<string, int> method;
-        public string mode;
+        private Func<byte, int> method;
+        public byte mode;
+        /*
+         Modes:
+        0: A		....	Accumulator	 	OPC A	 	operand is AC (implied single byte instruction)
+        1: abs		....	absolute	 	OPC $LLHH	 	operand is address $HHLL *
+        2: abs,X	....	absolute, X-indexed	 	OPC $LLHH,X	 	operand is address; effective address is address incremented by X with carry **
+        3: abs,Y	....	absolute, Y-indexed	 	OPC $LLHH,Y	 	operand is address; effective address is address incremented by Y with carry **
+        4: #		....	immediate	 	OPC #$BB	 	operand is byte BB
+        5: impl	....	implied	 	OPC	 	operand implied
+        6: ind	    ....	indirect	 	OPC ($LLHH)	 	operand is address; effective address is contents of word at address: C.w($HHLL)
+        7: X,ind	....	X-indexed, indirect	 	OPC ($LL,X)	 	operand is zeropage address; effective address is word in (LL + X, LL + X + 1), inc. without carry: C.w($00LL + X)
+        8: ind,Y	....	indirect, Y-indexed	 	OPC ($LL),Y	 	operand is zeropage address; effective address is word in (LL, LL + 1) incremented by Y with carry: C.w($00LL) + Y
+        9: rel		....	relative	 	OPC $BB	 	branch target is PC + signed offset BB ***
+        10: zpg		....	zeropage	 	OPC $LL	 	operand is zeropage address (hi-byte is zero, address = $00LL)
+        11: zpg,X	....	zeropage, X-indexed	 	OPC $LL,X	 	operand is zeropage address; effective address is address incremented by X without carry **
+        12: zpg,Y	....	zeropage, Y-indexed	 	OPC $LL,Y	 	operand is zeropage address; effective address is address incremented by Y without carry **
+        
+        13: internal
+        */
 
-        public InstructionCaller(Func<string, int> method, string mode)
+        public InstructionCaller(Func<byte, int> method, byte mode)
         {
             this.method = method;
             this.mode = mode;
@@ -26,6 +44,11 @@ namespace NesEmulator
         public int call()
         {
             return this.method(this.mode);
+        }
+
+        public string getName()
+        {
+            return this.method.Method.Name;
         }
 
     }
@@ -60,7 +83,7 @@ namespace NesEmulator
             foreach (KeyValuePair<string, string> entry in opcodes)
             {
                 string[] instructionString = entry.Value.Split(' ');
-                Func<string, int> instruction;
+                Func<byte, int> instruction;
 
                 switch (instructionString[0])
                 {
@@ -135,9 +158,28 @@ namespace NesEmulator
                     default: throw new Exception("Unknown instruction: " + instructionString[0]);
                 }
 
+                byte mode;
+                switch (instructionString[1])
+                {
+                    case "A": mode = 0; break;
+                    case "abs": mode = 1; break;
+                    case "abs,X": mode = 2; break;
+                    case "abs,Y": mode = 3; break;
+                    case "#": mode = 4; break;
+                    case "impl": mode = 5; break;
+                    case "ind": mode = 6; break;
+                    case "X,ind": mode = 7; break;
+                    case "ind,Y": mode = 8; break;
+                    case "rel": mode = 9; break;
+                    case "zpg": mode = 10; break;
+                    case "zpg,X": mode = 11; break;
+                    case "zpg,Y": mode = 12; break;
+                    default: throw new Exception("Unknown mode: " + instructionString[1]);
+                }
+
                 if (instruction != null)
                 {
-                    this.instructions[int.Parse(entry.Key, NumberStyles.HexNumber)] = new InstructionCaller(instruction, instructionString[1]);
+                    this.instructions[int.Parse(entry.Key, NumberStyles.HexNumber)] = new InstructionCaller(instruction, mode);
                 }
             }
 
@@ -212,26 +254,6 @@ namespace NesEmulator
             int opcode = this.mem.getCurrent().unsigned();
             this.mem.incrPc();
 
-            if (makeLog)
-            {
-                this.log(
-                    string.Format(
-                        "    {0}  {1} {2}: {3,5}\t\t{4}     A:{5} X:{6} Y:{7} P:{8} SP:{9}        CYC:{10}",
-                        (this.mem.getPc() - 1).ToString("x2"),
-                        opcode,
-                        "INSTRUCTION", // instruction,
-                        "MODE", // mode,
-                        this.mem.getCurrent().unsigned().ToString("x2"),
-                        this.mem.ac.hex(),
-                        this.mem.x.hex(),
-                        this.mem.y.hex(),
-                        this.mem.sr.hex(),
-                        this.mem.sp.hex(),
-                        this.cycle
-                    )
-                );
-            }
-
             /*
             * JMP and JSR instructions work slightly differently,
             * as we need to operate on 2 bytes instead of a memory address
@@ -295,12 +317,33 @@ namespace NesEmulator
             }
 
             InstructionCaller ic = this.instructions[opcode];
+
             if (ic == null)
             {
                 // Unknown opcode is interpreted as KIL instruction
                 this.kil = true;
                 return 0;
             }
+            if (makeLog)
+            {
+                this.log(
+                    string.Format(
+                        "    {0}  {1:x2} {2}: {3,5}\t\t{4}     A:{5} X:{6} Y:{7} P:{8} SP:{9}        CYC:{10}",
+                        (this.mem.getPc() - 1).ToString("x2"),
+                        opcode,
+                        ic.getName(), // instruction,
+                        ic.mode, // mode,
+                        this.mem.getCurrent().unsigned().ToString("x2"),
+                        this.mem.ac.hex(),
+                        this.mem.x.hex(),
+                        this.mem.y.hex(),
+                        this.mem.sr.hex(),
+                        this.mem.sp.hex(),
+                        this.cycle
+                    )
+                );
+            }
+
             this.getOper(ic.mode);
 
             if (this.oper.shared)
@@ -313,22 +356,22 @@ namespace NesEmulator
             return ic.call();
         }
 
-        private void getOper(string mode)
+        private void getOper(int mode)
         {
             PureByte ll;
             PureByte hh;
 
             switch (mode)
             {
-                case "impl":
+                case 5:  // impl
                     this.oper = new PureByte();
                     this.pageChange = (byte)0;
                     return;
-                case "A":
+                case 0:  // A
                     this.oper = this.mem.ac;
                     this.pageChange = (byte)0;
                     return;
-                case "abs":
+                case 1:  // abs
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
                     hh = this.mem.getCurrent();
@@ -338,7 +381,7 @@ namespace NesEmulator
                     this.pageChange = (byte)0;
                     return;
 
-                case "abs,X":
+                case 2:  // abs,X
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
                     hh = this.mem.getCurrent();
@@ -348,7 +391,7 @@ namespace NesEmulator
                     this.pageChange = (byte)(ll.unsigned() + this.mem.x.unsigned() > 0xff ? 1 : 0);
                     return;
 
-                case "abs,Y":
+                case 3:  // abs,Y
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
                     hh = this.mem.getCurrent();
@@ -358,14 +401,14 @@ namespace NesEmulator
                     this.pageChange = (byte)(ll.unsigned() + this.mem.y.unsigned() > 0xff ? 1 : 0);
                     return;
 
-                case "#":
+                case 4:  // #
                     this.oper = this.mem.getCurrent();
                     this.mem.incrPc();
 
                     this.pageChange = (byte)0;
                     return;
 
-                case "X,ind":
+                case 7:  // X,ind
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
@@ -376,7 +419,7 @@ namespace NesEmulator
                     this.pageChange = (byte)0;
                     return;
 
-                case "ind,Y":
+                case 8:  // ind,Y
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
@@ -388,14 +431,14 @@ namespace NesEmulator
                     this.pageChange = (byte)(effective_low + this.mem.y.unsigned() > 0xff ? 1 : 0);
                     return;
 
-                case "rel":
+                case 9:  // rel
                     this.oper = this.mem.getCurrent();
                     this.mem.incrPc();
 
                     this.pageChange = (byte)0;
                     return;
 
-                case "zpg":
+                case 10:  // zpg
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
@@ -403,7 +446,7 @@ namespace NesEmulator
                     this.pageChange = (byte)0;
                     return;
 
-                case "zpg,X":
+                case 11:  // zpg,X
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 
@@ -411,7 +454,7 @@ namespace NesEmulator
                     this.pageChange = (byte)0;
                     return;
 
-                case "zpg,Y":
+                case 12:  // zpg,Y
                     ll = this.mem.getCurrent();
                     this.mem.incrPc();
 

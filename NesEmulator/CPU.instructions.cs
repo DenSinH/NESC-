@@ -12,7 +12,7 @@ namespace NesEmulator
          Code for the instructions of the MOS 6502 CPU
              */
 
-        private int ADC(string mode)
+        private int ADC(byte mode)
         {
             /*
             ADC  Add Memory to Accumulator with Carry
@@ -41,20 +41,20 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X":
-                case "abs": return 4;
-                case "abs,X":
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 11:
+                case 1: return 4;
+                case 2:
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int AND(string mode)
+        private int AND(byte mode)
         {
             /*
             AND  AND Memory with Accumulator
@@ -77,20 +77,20 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int ASL(string mode)
+        private int ASL(byte mode)
         {
             /*
             ASL  Shift Left One Bit (Memory || Accumulator);
@@ -111,17 +111,17 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "A": return 2;
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "internal": return 0;
+                case 0: return 2;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int BCC(string mode)
+        private int BCC(byte mode)
         {
             /*
             BCC  Branch on Carry Clear
@@ -132,7 +132,7 @@ namespace NesEmulator
                     relative      BCC oper      90    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('C') == 0)
                 {
@@ -147,7 +147,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BCS(string mode)
+        private int BCS(byte mode)
         {
             /*
             BCS  Branch on Carry Set
@@ -158,7 +158,7 @@ namespace NesEmulator
                     relative      BCS oper      B0    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('C') == 1)
                 {
@@ -173,7 +173,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BEQ(string mode)
+        private int BEQ(byte mode)
         {
             /*
             BEQ  Branch on Result Zero
@@ -184,7 +184,7 @@ namespace NesEmulator
                     relative      BEQ oper      F0    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('Z') == 1)
                 {
@@ -199,7 +199,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BIT(string mode)
+        private int BIT(byte mode)
         {
             /*
             BIT  Test Bits in Memory with Accumulator
@@ -219,13 +219,13 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 3;
-                case "abs": return 4;
+                case 10: return 3;
+                case 1: return 4;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int BMI(string mode)
+        private int BMI(byte mode)
         {
             /*
             BMI  Branch on Result Minus
@@ -236,7 +236,7 @@ namespace NesEmulator
                     relative      BMI oper      30    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('N') == 1)
                 {
@@ -251,7 +251,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BNE(string mode)
+        private int BNE(byte mode)
         {
             /*
             BNE  Branch on Result not Zero
@@ -262,7 +262,7 @@ namespace NesEmulator
                     relative      BNE oper      D0    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('Z') == 0)
                 {
@@ -277,7 +277,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BPL(string mode)
+        private int BPL(byte mode)
         {
             /*
             BPL  Branch on Result Plus
@@ -288,7 +288,7 @@ namespace NesEmulator
                     relative      BPL oper      10    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('N') == 0)
                 {
@@ -303,7 +303,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BRK(string mode)
+        private int BRK(byte mode)
         {
             /*
             BRK  Force Break
@@ -320,14 +320,14 @@ namespace NesEmulator
             this.mem.push(this.mem.sr.unsigned() | 0b00110000);
             this.mem.setPc(this.mem.get(this.mem.irqVector[0]), this.mem.get(this.mem.irqVector[1]));
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 7;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BVC(string mode)
+        private int BVC(byte mode)
         {
             /*
             BVC  Branch on Overflow Clear
@@ -338,7 +338,7 @@ namespace NesEmulator
                     relative      BVC oper      50    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('V') == 0)
                 {
@@ -353,7 +353,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int BVS(string mode)
+        private int BVS(byte mode)
         {
             /*
             BVS  Branch on Overflow Set
@@ -364,7 +364,7 @@ namespace NesEmulator
                     relative      BVC oper      70    2     2**
             */
 
-            if ("rel".Equals(mode))
+            if (mode == 9)
             {
                 if (this.mem.getFlag('V') == 1)
                 {
@@ -379,7 +379,7 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLC(string mode)
+        private int CLC(byte mode)
         {
             /*
             CLC  Clear Carry Flag
@@ -392,14 +392,14 @@ namespace NesEmulator
 
             this.mem.setFlag('C', (byte)0);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLD(string mode)
+        private int CLD(byte mode)
         {
             /*
             CLD  Clear Decimal Mode
@@ -412,14 +412,14 @@ namespace NesEmulator
 
             this.mem.setFlag('D', (byte)0);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLI(string mode)
+        private int CLI(byte mode)
         {
             /*
             CLI  Clear Interrupt Disable Bit
@@ -432,14 +432,14 @@ namespace NesEmulator
 
             this.mem.setFlag('I', (byte)0);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CLV(string mode)
+        private int CLV(byte mode)
         {
             /*
             CLV  Clear Overflow Flag
@@ -452,14 +452,14 @@ namespace NesEmulator
 
             this.mem.setFlag('V', (byte)0);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int CMP(string mode)
+        private int CMP(byte mode)
         {
             /*
             CMP  Compare Memory with Accumulator
@@ -483,20 +483,20 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int CPX(string mode)
+        private int CPX(byte mode)
         {
             /*
             CPX  Compare Memory && Index X
@@ -515,14 +515,14 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "abs": return 4;
+                case 4: return 2;
+                case 10: return 3;
+                case 1: return 4;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int CPY(string mode)
+        private int CPY(byte mode)
         {
             /*
             CPY  Compare Memory && Index Y
@@ -541,14 +541,14 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "abs": return 4;
+                case 4: return 2;
+                case 10: return 3;
+                case 1: return 4;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int DEC(string mode)
+        private int DEC(byte mode)
         {
             /*
             DEC  Decrement Memory by One
@@ -567,16 +567,16 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "internal": return 0;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int DEX(string mode)
+        private int DEX(byte mode)
         {
             /*
             DEX  Decrement Index X by One
@@ -590,14 +590,14 @@ namespace NesEmulator
             this.mem.x.decr();
             this.mem.setNZ(this.mem.x);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int DEY(string mode)
+        private int DEY(byte mode)
         {
             /*
             DEY  Decrement Index Y by One
@@ -611,14 +611,14 @@ namespace NesEmulator
             this.mem.y.decr();
             this.mem.setNZ(this.mem.y);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int EOR(string mode)
+        private int EOR(byte mode)
         {
             /*
             EOR  Exclusive-OR Memory with Accumulator
@@ -641,20 +641,20 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int INC(string mode)
+        private int INC(byte mode)
         {
             /*
             INC  Increment Memory by One
@@ -673,16 +673,16 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "internal": return 0;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int INX(string mode)
+        private int INX(byte mode)
         {
             /*
             INX  Increment Index X by One
@@ -696,14 +696,14 @@ namespace NesEmulator
             this.mem.x.incr();
             this.mem.setNZ(this.mem.x);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int INY(string mode)
+        private int INY(byte mode)
         {
             /*
             INY  Increment Index Y by One
@@ -717,14 +717,15 @@ namespace NesEmulator
             this.mem.y.incr();
             this.mem.setNZ(this.mem.y);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
+
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int LDA(string mode)
+        private int LDA(byte mode)
         {
             /*
             LDA  Load Accumulator with Memory
@@ -747,20 +748,20 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int LDX(string mode)
+        private int LDX(byte mode)
         {
             /*
             LDX  Load Index X with Memory
@@ -780,17 +781,17 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,Y": return 4;
-                case "abs": return 4;
-                case "abs,Y": return 4 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 12: return 4;
+                case 1: return 4;
+                case 3: return 4 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int LDY(string mode)
+        private int LDY(byte mode)
         {
             /*
             LDY  Load Index Y with Memory
@@ -810,16 +811,16 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int LSR(string mode)
+        private int LSR(byte mode)
         {
             /*
             LSR  Shift One Bit Right (Memory || Accumulator);
@@ -841,17 +842,17 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "A": return 2;
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "internal": return 0;
+                case 0: return 2;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int NOP(string mode)
+        private int NOP(byte mode)
         {
             /*
             NOP  No Operation
@@ -864,19 +865,19 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "impl": return 2;
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "zpg,Y": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
-                case "abs,Y": return 4 + pageChange;
+                case 5: return 2;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 12: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
+                case 3: return 4 + pageChange;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int ORA(string mode)
+        private int ORA(byte mode)
         {
             /*
             ORA  OR Memory with Accumulator
@@ -899,20 +900,20 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int PHA(string mode)
+        private int PHA(byte mode)
         {
             /*
             PHA  Push Accumulator on Stack
@@ -925,14 +926,14 @@ namespace NesEmulator
 
             this.mem.push(this.mem.ac);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 3;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int PHP(string mode)
+        private int PHP(byte mode)
         {
             /*
             PHP  Push Processor Status on Stack
@@ -945,14 +946,14 @@ namespace NesEmulator
 
             this.mem.push(this.mem.sr.unsigned() | 0b00110000);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 3;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int PLA(string mode)
+        private int PLA(byte mode)
         {
             /*
             PLA  Pull Accumulator from Stack
@@ -966,14 +967,14 @@ namespace NesEmulator
             this.mem.ac.set(this.mem.pull());
             this.mem.setNZ(this.mem.ac);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 4;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int PLP(string mode)
+        private int PLP(byte mode)
         {
             /*
             PLP  Pull Processor Status from Stack
@@ -986,14 +987,14 @@ namespace NesEmulator
 
             this.mem.sr.set((this.mem.pull().unsigned() | 0x20) & 0xef);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 4;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int ROL(string mode)
+        private int ROL(byte mode)
         {
             /*
             ROL  Rotate One Bit Left (Memory || Accumulator);
@@ -1013,17 +1014,17 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "A": return 2;
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "internal": return 0;
+                case 0: return 2;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int ROR(string mode)
+        private int ROR(byte mode)
         {
             /*
             ROR  Rotate One Bit Right (Memory || Accumulator);
@@ -1044,17 +1045,17 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "A": return 2;
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "internal": return 0;
+                case 0: return 2;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int RTI(string mode)
+        private int RTI(byte mode)
         {
             /*
                 RTI  Return from Interrupt
@@ -1069,7 +1070,7 @@ namespace NesEmulator
             this.mem.pc[1].set(this.mem.pull());
             this.mem.pc[0].set(this.mem.pull());
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 6;
             }
@@ -1077,7 +1078,7 @@ namespace NesEmulator
 
         }
 
-        private int RTS(string mode)
+        private int RTS(byte mode)
         {
             /*
             RTS  Return from Subroutine
@@ -1093,14 +1094,14 @@ namespace NesEmulator
 
             this.mem.incrPc();
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 6;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SBC(string mode)
+        private int SBC(byte mode)
         {
             /*
             SBC  Subtract Memory from Accumulator with Borrow
@@ -1122,20 +1123,20 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "#": return 2;
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 4 + pageChange;
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
-                case "internal": return 0;
+                case 4: return 2;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 4 + pageChange;
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int SEC(string mode)
+        private int SEC(byte mode)
         {
             /*
             SEC  Set Carry Flag
@@ -1150,13 +1151,13 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "impl": return 2;
-                case "internal": return 0;
+                case 5: return 2;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int SED(string mode)
+        private int SED(byte mode)
         {
             /*
             SED  Set Decimal Flag
@@ -1169,14 +1170,14 @@ namespace NesEmulator
 
             this.mem.setFlag('D', (byte)1);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SEI(string mode)
+        private int SEI(byte mode)
         {
             /*
             SEI  Set Interrupt Disable Status
@@ -1189,14 +1190,14 @@ namespace NesEmulator
 
             this.mem.setFlag('I', (byte)1);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int STA(string mode)
+        private int STA(byte mode)
         {
             /*
             STA  Store Accumulator in Memory
@@ -1217,19 +1218,19 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
-                case "abs,X": return 5;
-                case "abs,Y": return 5;
-                case "X,ind": return 6;
-                case "ind,Y": return 6;
-                case "internal": return 0;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
+                case 2: return 5;
+                case 3: return 5;
+                case 7: return 6;
+                case 8: return 6;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int STX(string mode)
+        private int STX(byte mode)
         {
             /*
             STX  Store Index X in Memory
@@ -1246,15 +1247,15 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 3;
-                case "zpg,Y": return 4;
-                case "abs": return 4;
-                case "internal": return 0;
+                case 10: return 3;
+                case 12: return 4;
+                case 1: return 4;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int STY(string mode)
+        private int STY(byte mode)
         {
             /*
             STY  Sore Index Y in Memory
@@ -1271,14 +1272,14 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "abs": return 4;
+                case 10: return 3;
+                case 11: return 4;
+                case 1: return 4;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int TAX(string mode)
+        private int TAX(byte mode)
         {
             /*
             TAX  Transfer Accumulator to Index X
@@ -1294,13 +1295,13 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "impl": return 2;
-                case "internal": return 0;
+                case 5: return 2;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int TAY(string mode)
+        private int TAY(byte mode)
         {
             /*
             TAY  Transfer Accumulator to Index Y
@@ -1314,14 +1315,14 @@ namespace NesEmulator
             this.mem.y.set(this.mem.ac);
             this.mem.setNZ(this.mem.y);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int TSX(string mode)
+        private int TSX(byte mode)
         {
             /*
             TSX  Transfer Stack Pointer to Index X
@@ -1335,14 +1336,14 @@ namespace NesEmulator
             this.mem.x.set(this.mem.sp);
             this.mem.setNZ(this.mem.x);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int TXA(string mode)
+        private int TXA(byte mode)
         {
             /*
             TXA  Transfer Index X to Accumulator
@@ -1358,13 +1359,13 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "impl": return 2;
-                case "internal": return 0;
+                case 5: return 2;
+                case 13: return 0;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int TXS(string mode)
+        private int TXS(byte mode)
         {
             /*
             TXS  Transfer Index X to Stack Register
@@ -1377,14 +1378,14 @@ namespace NesEmulator
 
             this.mem.sp.set(this.mem.x);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int TYA(string mode)
+        private int TYA(byte mode)
         {
             /*
             TYA  Transfer Index Y to Accumulator
@@ -1398,14 +1399,14 @@ namespace NesEmulator
             this.mem.ac.set(this.mem.y);
             this.mem.setNZ(this.mem.ac);
 
-            if ("impl".Equals(mode))
+            if (mode == 5)
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SLO(string mode)
+        private int SLO(byte mode)
         {
             /*
             ASO    ***    (SLO);
@@ -1434,23 +1435,23 @@ namespace NesEmulator
             ORA $C010;
             */
 
-            this.ASL("internal");
-            this.ORA("internal");
+            this.ASL(13);
+            this.ORA(13);
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "abs,Y": return 7;
-                case "X,ind": return 8;
-                case "ind,Y": return 8;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 3: return 7;
+                case 7: return 8;
+                case 8: return 8;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int RLA(string mode)
+        private int RLA(byte mode)
         {
             /*
             RLA    ***
@@ -1479,23 +1480,23 @@ namespace NesEmulator
             AND $FC,X
             */
 
-            this.ROL("internal");
-            this.AND("internal");
+            this.ROL(13);
+            this.AND(13);
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "abs,Y": return 7;
-                case "X,ind": return 8;
-                case "ind,Y": return 8;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 3: return 7;
+                case 7: return 8;
+                case 8: return 8;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int SRE(string mode)
+        private int SRE(byte mode)
         {
             /*
             LSE    ***   (SRE);
@@ -1524,23 +1525,23 @@ namespace NesEmulator
             EOR $C100,X
             */
 
-            this.LSR("internal");
-            this.EOR("internal");
+            this.LSR(13);
+            this.EOR(13);
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "abs,Y": return 7;
-                case "X,ind": return 8;
-                case "ind,Y": return 8;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 3: return 7;
+                case 7: return 8;
+                case 8: return 8;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int RRA(string mode)
+        private int RRA(byte mode)
         {
             /*
             RRA    ***
@@ -1569,23 +1570,23 @@ namespace NesEmulator
             ADC $030C
             */
 
-            this.ROR("internal");
-            this.ADC("internal");
+            this.ROR(13);
+            this.ADC(13);
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "abs,Y": return 7;
-                case "X,ind": return 8;
-                case "ind,Y": return 8;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 3: return 7;
+                case 7: return 8;
+                case 8: return 8;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int SAX(string mode)
+        private int SAX(byte mode)
         {
             /*
             AXS    ***    (SAX);
@@ -1619,15 +1620,15 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 4;
-                case "zpg,Y": return 3;
-                case "abs": return 4;
-                case "X,ind": return 6;
+                case 10: return 4;
+                case 12: return 3;
+                case 1: return 4;
+                case 7: return 6;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int LAX(string mode)
+        private int LAX(byte mode)
         {
             /*
             LAX    ***
@@ -1655,22 +1656,22 @@ namespace NesEmulator
             LDX $8400,Y
             */
 
-            this.LDA("internal");
-            this.LDX("internal");
+            this.LDA(13);
+            this.LDX(13);
 
             switch (mode)
             {
-                case "zpg": return 3;
-                case "zpg,Y": return 4;
-                case "abs": return 4;
-                case "abs,Y": return 4 + pageChange;
-                case "X,ind": return 6;
-                case "ind,Y": return 5 + pageChange;
+                case 10: return 3;
+                case 12: return 4;
+                case 1: return 4;
+                case 3: return 4 + pageChange;
+                case 7: return 6;
+                case 8: return 5 + pageChange;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int DCP(string mode)
+        private int DCP(byte mode)
         {
             /*
             DCM    ***    (DCP);
@@ -1699,23 +1700,23 @@ namespace NesEmulator
             CMP $FF
             */
 
-            this.DEC("internal");
-            this.CMP("internal");
+            this.DEC(13);
+            this.CMP(13);
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "abs,Y": return 7;
-                case "X,ind": return 8;
-                case "ind,Y": return 8;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 3: return 7;
+                case 7: return 8;
+                case 8: return 8;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int ISC(string mode)
+        private int ISC(byte mode)
         {
             /*
             INS    ***    (ISC);
@@ -1744,23 +1745,23 @@ namespace NesEmulator
             SBC $FF
             */
 
-            this.INC("internal");
-            this.SBC("internal");
+            this.INC(13);
+            this.SBC(13);
 
             switch (mode)
             {
-                case "zpg": return 5;
-                case "zpg,X": return 6;
-                case "abs": return 6;
-                case "abs,X": return 7;
-                case "abs,Y": return 7;
-                case "X,ind": return 8;
-                case "ind,Y": return 8;
+                case 10: return 5;
+                case 11: return 6;
+                case 1: return 6;
+                case 2: return 7;
+                case 3: return 7;
+                case 7: return 8;
+                case 8: return 8;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int ALR(string mode)
+        private int ALR(byte mode)
         {
             /*
             ALR    ***
@@ -1781,18 +1782,18 @@ namespace NesEmulator
             LSR A
             */
 
-            this.AND("internal");
+            this.AND(13);
             this.oper = this.mem.ac;
-            this.LSR("A");
+            this.LSR(0);
 
-            if ("#".Equals(mode))
+            if (4.Equals(mode))
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int ARR(string mode)
+        private int ARR(byte mode)
         {
             /*
             ARR    ***
@@ -1813,18 +1814,18 @@ namespace NesEmulator
             ROR A
             */
 
-            this.AND("internal");
+            this.AND(13);
             this.oper = this.mem.ac;
-            this.ROR("A");
+            this.ROR(0);
 
-            if ("#".Equals(mode))
+            if (4.Equals(mode))
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int XAA(string mode)
+        private int XAA(byte mode)
         {
             /*
             XAA    ***
@@ -1846,17 +1847,17 @@ namespace NesEmulator
             */
 
             this.oper = new PureByte();
-            this.TXA("internal");
-            this.AND("internal");
+            this.TXA(13);
+            this.AND(13);
 
-            if ("#".Equals(mode))
+            if (4.Equals(mode))
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int OAL(string mode)
+        private int OAL(byte mode)
         {
             /*
             OAL    ***
@@ -1879,19 +1880,19 @@ namespace NesEmulator
             */
 
             this.oper = new PureByte(0xee);
-            this.ORA("#");
-            this.AND("internal");
+            this.ORA(4);
+            this.AND(13);
             this.oper = new PureByte();
-            this.TAX("internal");
+            this.TAX(13);
 
-            if ("#".Equals(mode))
+            if (4.Equals(mode))
             {
                 return 2;
             }
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
-        private int SKB(string mode)
+        private int SKB(byte mode)
         {
             /*
             SKB stands for skip next byte.
@@ -1903,15 +1904,15 @@ namespace NesEmulator
 
             switch (mode)
             {
-                case "zpg": return 3;
-                case "zpg,X": return 4;
-                case "#": return 6;
-                case "ind,Y": return 8;
+                case 10: return 3;
+                case 11: return 4;
+                case 4: return 6;
+                case 8: return 8;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
 
-        private int SKW(string mode)
+        private int SKW(byte mode)
         {
             /*
             SKW skips next word (two bytes).

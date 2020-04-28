@@ -1,6 +1,6 @@
 ﻿namespace NesEmulator
 {
-    class Memory
+    abstract class Memory
     {
         protected PureByte[] storage;
 
