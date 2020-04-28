@@ -5,6 +5,7 @@ namespace NesEmulator
 {
     class PPUMEM : Memory
     {
+
         public PPUMEM()
         {
             this.storage = new byte[0x10000];

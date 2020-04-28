@@ -61,14 +61,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CPU.instructions.cs" />
+    <Compile Include="CPU.Instructions.cs" />
     <Compile Include="Memory.cs" />
     <Compile Include="NES.cs" />
     <Compile Include="PPU.cs" />
     <Compile Include="PPUMEM.cs" />
     <Compile Include="PPUOAM.cs" />
     <Compile Include="CPU.cs" />
-    <Compile Include="CPUMEM.cs" />
+    <Compile Include="CPU.Memory.cs" />
     <Compile Include="Visual.cs">
       <SubType>Form</SubType>
     </Compile>
