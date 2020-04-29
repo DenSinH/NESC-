@@ -55,10 +55,10 @@ namespace NesEmulator
 
     partial class CPU
     {
-        private const bool makeLog = false;
+        private const bool makeLog = true;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        private CPUMEM mem;
+        public CPUMEM mem;
         private int cycle;
         private bool kil = false;
 
@@ -192,32 +192,6 @@ namespace NesEmulator
             Console.WriteLine(message);
         }
 
-        public void Load(string filename, int start)
-        {
-            // load rom into memory
-            using (FileStream fs = File.OpenRead(filename))
-            {
-                byte current;
-                for (int i = start; i < 0x10000; i++)
-                {
-                    current = (byte)fs.ReadByte();
-                    if (current == -1)
-                    {
-                        break;
-                    }
-
-                    this.mem[i] = current;
-                }
-            }
-            this.log(filename + " loaded");
-            this.RESET();
-        }
-
-        public void Load(string filename)
-        {
-            this.Load(filename, 0);
-        }
-
         public void RESET()
         {
             this.mem.push(this.mem[0x100]);
@@ -227,6 +201,7 @@ namespace NesEmulator
                 this.mem[this.mem.resetVector[0]],
                 this.mem[this.mem.resetVector[1]]
                 );
+            Console.WriteLine(this.mem.pc[0].ToString("x2") + this.mem.pc[1].ToString("x2"));
             this.cycle = 7;
         }
 

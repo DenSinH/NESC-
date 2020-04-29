@@ -9,14 +9,14 @@ namespace NesEmulator
     public partial class Visual : Form
     {
         private Bitmap Backbuffer;
-        private byte[] rawBitmap;
+        private int[] rawBitmap;
         private GCHandle _rawBitmap;
 
         private const int width = 0x100;
         private const int height = 0xf0;
         private const double scale = 2;
 
-        public Visual(byte[] rawBitmap)
+        public Visual(int[] rawBitmap)
         {
             InitializeComponent();
             this.Size = new Size((int) (scale * width), (int) (scale * height));
@@ -35,7 +35,7 @@ namespace NesEmulator
             );
 
             Timer timer = new Timer();
-            timer.Interval = 16;
+            timer.Interval = 17;
             timer.Tick += new EventHandler(Tick);
             timer.Start();
             
@@ -83,7 +83,7 @@ namespace NesEmulator
                 {
                     _rawBitmap = GCHandle.Alloc(this.rawBitmap, GCHandleType.Pinned);
                     this.Backbuffer = new Bitmap(width, height, width * 3,
-                                PixelFormat.Format24bppRgb, _rawBitmap.AddrOfPinnedObject());
+                                PixelFormat.Format32bppRgb, _rawBitmap.AddrOfPinnedObject());
                 }
 
                 _rawBitmap.Free();

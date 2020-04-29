@@ -9,49 +9,39 @@ namespace NesEmulator
 
     class Program
     {
-        public static void Run(byte[] rawBitmap)
+        public static void Run(int[] rawBitmap)
         {
-            CPU cpu = new CPU();
-            cpu.Load("../../roms/nestest.nes", 0xc000 - 0x10);
-            cpu.SetPc(0xc000);
+            //CPU cpu = new CPU();
+            //cpu.Load("../../roms/nestest.nes", 0xc000 - 0x10);
+            //cpu.SetPc(0xc000);
 
             // cpu.Load("../../roms/6502_functional_test.bin");
             // cpu.SetPc(0x400);
 
             // cpu.Load("../../roms/TTL6502.bin", 0xe000);
 
-            Console.WriteLine("Starting run in 2 seconds");
-            Thread.Sleep(2000);
+            //Console.WriteLine("Starting run in 2 seconds");
+            //Thread.Sleep(2000);
 
-            Stopwatch s = Stopwatch.StartNew();
-            cpu.Run();
-            s.Stop();
+            //Stopwatch s = Stopwatch.StartNew();
+            //cpu.Run();
+            //s.Stop();
 
-            Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
+            // Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
 
-            while (true)
-            {
-                lock (rawBitmap)
-                {
-                    try
-                    {
-                        Random rnd = new Random();
-                        rnd.NextBytes(rawBitmap);
-                    }
-                    catch (ArgumentNullException)
-                    {
-                        Console.WriteLine("Something went wrong");
-                    }
-                }
-                Thread.Sleep(1);
-            }
+            NES nes = new NES(rawBitmap);
+
+            Cartridge nestest = new Cartridge("../../roms/nestest.nes");
+            nestest.LoadTo(nes);
+
+            nes.Run();
 
         }
 
         [STAThread]
         static void Main()
         {
-            byte[] rawBitmap = new byte[0x100 * 0xf0 * 3];
+            int[] rawBitmap = new int[0x100 * 0xf0 * 3];
 
             Thread t = new Thread(() => Run(rawBitmap));
             t.Start();

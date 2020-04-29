@@ -4,8 +4,10 @@ namespace NesEmulator
 {
     partial class CPU
     {
-        class CPUMEM : Memory
+        public class CPUMEM
         {
+            private byte[] storage;
+
             public byte[] pc;
             public byte ac, x, y, sr, sp;
 
@@ -33,27 +35,62 @@ namespace NesEmulator
                 this.sp = 0x00;
             }
 
-            protected override int Map(int index)
+            public byte this[int index]
             {
-                if (index < 0)
+                get
                 {
-                    return index;
+                    if (index >= 0)
+                    {
+                        return this.storage[this.Map(index)];
+                    }
+                    return this.GetSpecial(index);
                 }
-                else if (index < 0x2000)
+                set
                 {
-                    return index % 0x800;
-                }
-                else if (index < 0x4000)
-                {
-                    return 0x2000 + (index % 8);
-                }
-                else
-                {
-                    return index;
+                    if (index >= 0)
+                    {
+                        this.storage[this.Map(index)] = value;
+                    }
+                    else
+                    {
+                        this.SetSpecial(index, value);
+                    }
                 }
             }
 
-            protected override byte GetSpecial(int index)
+            public byte this[byte ll, byte hh]
+            {
+                get
+                {
+                    return this.storage[this.Map(0x100 * hh + ll)];
+                }
+                set
+                {
+                    this.storage[this.Map(0x100 * hh + ll)] = value; ;
+                }
+            }
+
+            protected int Map(int index)
+                {
+                    if (index < 0)
+                    {
+                        return index;
+                    }
+                    else if (index < 0x2000)
+                    {
+                        return index % 0x800;
+                    }
+                    else if (index < 0x4000)
+                    {
+                        return 0x2000 + (index % 8);
+                    }
+                    else
+                    {
+                        return index;
+                    }
+                }
+
+            protected byte GetSpecial(int index)
             {
                 if (index == -0x100)
                 {
@@ -62,7 +99,7 @@ namespace NesEmulator
                 return (byte)(-index - 0x200);
             }
 
-            protected override void SetSpecial(int index, byte value)
+            protected void SetSpecial(int index, byte value)
             {
                 if (index == -0x100)
                 {
