@@ -11,6 +11,8 @@ namespace NesEmulator
         private int cycle = 0;
 
         public bool ThrowNMI = false;
+        public bool FinishedFrame = false;
+        private bool OddFrame = false;
 
         readonly int[] palette = {
             0x7C7C7C, 0x0000FC, 0x0000BC, 0x4428BC, 0x940084, 0xA80020, 0xA81000, 0x881400, 0x503000, 0x007800,
@@ -34,14 +36,56 @@ namespace NesEmulator
 
         public void Step()
         {
-            if (scanline == 241 && cycle == 1)
+            if (this.scanline == -1 && this.cycle == 1)
             {
+                // Set VBlank flag to 0 for pre-render line
+                this.VBlank = 0;
+            }
+            else if (this.scanline == 241 && this.cycle == 1)
+            {
+                // set VBlank flag to 1 on post-render line
                 this.VBlank = 1;
                 if (this.NMIEnable == 1)
                 {
                     this.ThrowNMI = true;
                 }
+
+                this.FinishedFrame = true;
+                this.OddFrame ^= true;
             }
+
+            // if rendering is enabled
+            if (cycle == 256)
+            {
+                IncrementCourseY();
+            }
+            else if (cycle == 257)
+            {
+                NTX = TNTX;
+                CourseX = TCourseX;
+            }
+            else if ((280 <= cycle) && (cycle <= 304))
+            {
+                FineY = TFineY;
+                CourseY = TCourseY;
+                NTY = TNTY;
+            }
+            else if ((cycle == 328) || (cycle == 336) || ((cycle < 256) && ((cycle % 8) == 0)))
+            {
+                IncrementCourseX();
+            }
+
+            cycle++;
+            if (cycle > 340)
+            {
+                cycle = 0;
+                scanline++;
+                if (scanline > 260)
+                {
+                    scanline = -1;
+                }
+            }
+
         }
 
         // todo: change to private

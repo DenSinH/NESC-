@@ -1,15 +1,16 @@
 ﻿using System;
+using System.Diagnostics;
 
 
 namespace NesEmulator
 {
     partial class PPU
     {
-        private byte[] oam = new byte[0x100];        // object attribute memory
+        private byte[] oam = new byte[0x100];           // object attribute memory
 
-        public byte[] PatternTable = new byte[0x2000];       // pattern tables
-        private byte[] VRAM = new byte[0x1000];      // nametables
-        public byte[] PaletteRAM = new byte[0x20];  // palette ram indices
+        public byte[] PatternTable = new byte[0x2000];  // pattern tables
+        public byte[] VRAM = new byte[0x1000];         // nametables + attribute tables
+        public byte[] PaletteRAM = new byte[0x20];      // palette ram indices
 
         public byte this[int index]
         {
@@ -21,7 +22,8 @@ namespace NesEmulator
                 }
                 else if (index < 0x3f00)
                 {
-                    return this.VRAM[(index - 0x2000) % 0x1000];
+                    // todo: Mirroring, currently default horizontal
+                    return this.VRAM[index % 0x1000];
                 }
                 else if (index < 0x4000)
                 {
@@ -51,7 +53,8 @@ namespace NesEmulator
                 }
                 else if (index < 0x3f00)
                 {
-                    this.VRAM[(index - 0x2000) % 0x1000] = value;
+                    // todo: Mirroring, currently default Horizontal
+                    this.VRAM[index % 0x1000] = value;
                 }
                 else if (index < 0x4000)
                 {

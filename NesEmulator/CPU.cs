@@ -55,7 +55,7 @@ namespace NesEmulator
 
     public partial class CPU
     {
-        private const bool makeLog = false;
+        private const byte makeLog = 1;  // 0: no log | 1: Console | 2: File + Console
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         
         public CPUMEM mem;
@@ -71,7 +71,7 @@ namespace NesEmulator
         {
             // initialize memory
             this.mem = new CPUMEM();
-            this.cycle = 7; // todo: cpu boot sequence
+            this.cycle = 0;
 
             // load opcodes
             string opcodeJson = File.ReadAllText("../../data/AllOpcodes.json");
@@ -191,9 +191,14 @@ namespace NesEmulator
         private void Log(string message)
         {
             // for logging results
-            // logger.Debug(message);
-            Console.WriteLine(message);
-        }
+            if (makeLog > 0)
+            {
+                Console.WriteLine(message);
+                if (makeLog > 1)
+                {
+                    logger.Debug(message);
+                }
+            }        }
 
         public void RESET()
         {
@@ -320,7 +325,7 @@ namespace NesEmulator
                 this.kil = true;
                 return 0;
             }
-            if (makeLog)
+            if (makeLog > 0)
             {
                 this.Log(
                     string.Format(
