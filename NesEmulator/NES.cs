@@ -3,10 +3,12 @@ using System.Threading;
 
 namespace NesEmulator
 {
-    class NES
+    public class NES
     {
         public CPU cpu;
         public PPU ppu;
+
+        private byte PaletteSelect = 0;
 
         private const int width = 256;
         private const int height = 240;
@@ -19,6 +21,8 @@ namespace NesEmulator
 
             this.cpu = new CPU();
             this.ppu = new PPU(display);
+
+            this.cpu.SetPPU(this.ppu);
             this.ppu.SetCPU(this.cpu);
         }
 
@@ -29,28 +33,57 @@ namespace NesEmulator
 
             // temporary
             // this.cpu.SetPc(0xc000);
-            this.cpu.Run();
-            Console.WriteLine(cpu.GetCycle());
-
+            int cycles = 0;
+            int dcycles;
             while (true)
             {
-                lock (this.display)
+                if (!this.ppu.ThrowNMI)
                 {
-                    try
-                    {
-                        Random rnd = new Random();
-                        for (int i = 0; i < 0x100 * 0xf0; i++)
-                        {
-                            this.display[i] = rnd.Next(0, 0xff);
-                        }
-                    }
-                    catch (ArgumentNullException)
-                    {
-                        Console.WriteLine("Something went wrong");
-                    }
+                    dcycles = this.cpu.Step();
                 }
-                Thread.Sleep(17);
+                else
+                {
+                    dcycles = this.cpu.NMI();
+                }
+                this.cpu.cycle += dcycles;
+
+                for (int i = 0; i < 3 * dcycles; i++)
+                {
+                    this.ppu.Step();
+                }
+
             }
+        }
+
+        public void PaletteTest()
+        {
+            // assume cartridge is loaded
+            this.cpu.RESET();
+
+            // temporary
+            // this.cpu.SetPc(0xc000);
+            int cycles = 0;
+            int dcycles;
+            while (true)
+            {
+                dcycles = this.cpu.Step();
+                this.cpu.cycle += dcycles;
+
+                cycles += dcycles;
+
+                // Would be one frame
+                if (cycles > 26_667)
+                {
+                    cycles -= 26_667;
+                    this.ppu.drawSpriteTable(0, this.PaletteSelect);
+                }
+            }
+        }
+
+        public void NextPalette()
+        {
+            this.PaletteSelect = (byte)((this.PaletteSelect + 1) % 8);
+            Console.WriteLine(this.PaletteSelect);
         }
 
     }

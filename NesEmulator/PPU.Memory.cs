@@ -7,11 +7,9 @@ namespace NesEmulator
     {
         private byte[] oam = new byte[0x100];        // object attribute memory
 
-        private byte[] chr = new byte[0x2000];       // pattern tables
-        private byte[] vram = new byte[0x1000];      // nametables
-        private byte[] paletteRam = new byte[0x20];  // palette ram indices
-
-        private int vPointer;
+        public byte[] PatternTable = new byte[0x2000];       // pattern tables
+        private byte[] VRAM = new byte[0x1000];      // nametables
+        public byte[] PaletteRAM = new byte[0x20];  // palette ram indices
 
         public byte this[int index]
         {
@@ -19,15 +17,21 @@ namespace NesEmulator
             {
                 if (index < 0x2000)
                 {
-                    return this.chr[index];
+                    return this.PatternTable[index];
                 }
                 else if (index < 0x3f00)
                 {
-                    return this.vram[(index - 0x2000) % 0x1000];
+                    return this.VRAM[(index - 0x2000) % 0x1000];
                 }
                 else if (index < 0x4000)
                 {
-                    return this.paletteRam[(index - 0x3f00) % 0x20];
+                    index &= 0x1f;
+                    if (index == 0x0010) index = 0x0000;
+                    else if (index == 0x0014) index = 0x0004;
+                    else if (index == 0x0018) index = 0x0008;
+                    else if (index == 0x0010) index = 0x000c;
+
+                    return this.PaletteRAM[index];
                 }
                 else if (index < 0x10000)
                 {
@@ -43,15 +47,21 @@ namespace NesEmulator
             {
                 if (index < 0x2000)
                 {
-                    this.chr[index] = value;
+                    this.PatternTable[index] = value;
                 }
                 else if (index < 0x3f00)
                 {
-                    this.vram[(index - 0x2000) % 0x1000] = value;
+                    this.VRAM[(index - 0x2000) % 0x1000] = value;
                 }
                 else if (index < 0x4000)
                 {
-                    this.paletteRam[(index - 0x3f00) % 0x20] = value;
+                    index &= 0x1f;
+                    if (index == 0x0010) index = 0x0000;
+                    else if (index == 0x0014) index = 0x0004;
+                    else if (index == 0x0018) index = 0x0008;
+                    else if (index == 0x0010) index = 0x000c;
+
+                    this.PaletteRAM[index] = value;
                 }
 
                 else if (index < 0x10000)

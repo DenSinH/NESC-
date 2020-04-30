@@ -9,7 +9,7 @@ namespace NesEmulator
 
     class Program
     {
-        public static void Run(int[] rawBitmap)
+        public static void Run(NES nes)
         {
             //CPU cpu = new CPU();
             //cpu.Load("../../roms/nestest.nes", 0xc000 - 0x10);
@@ -28,13 +28,11 @@ namespace NesEmulator
             //s.Stop();
 
             // Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
-
-            NES nes = new NES(rawBitmap);
-
+            
             Cartridge nestest = new Cartridge("../../roms/nestest.nes");
             nestest.LoadTo(nes);
 
-            nes.Run();
+            nes.PaletteTest();
 
         }
 
@@ -42,13 +40,14 @@ namespace NesEmulator
         static void Main()
         {
             int[] rawBitmap = new int[0x100 * 0xf0 * 3];
+            NES nes = new NES(rawBitmap);
 
-            Thread t = new Thread(() => Run(rawBitmap));
+            Thread t = new Thread(() => Run(nes));
             t.Start();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Visual(rawBitmap));
+            Application.Run(new Visual(nes));
         }
     }
 }

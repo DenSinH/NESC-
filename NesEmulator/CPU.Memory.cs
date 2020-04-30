@@ -11,6 +11,8 @@ namespace NesEmulator
             public byte[] pc;
             public byte ac, x, y, sr, sp;
 
+            public PPU ppu;
+
             public readonly int[] nmiVector = { 0xfffa, 0xfffb };
             public readonly int[] resetVector = { 0xfffc, 0xfffd };
             public readonly int[] irqVector = { 0xfffe, 0xffff };
@@ -41,6 +43,27 @@ namespace NesEmulator
                 {
                     if (index >= 0)
                     {
+                        switch (this.Map(index))
+                        {
+                            case 0x2000:
+                                throw new Exception("Cannot 'get' PPUCTRL");
+                            case 0x2001:
+                                throw new Exception("Cannot 'get' PPUMASK");
+                            case 0x2002:
+                                return this.ppu.PPUSTATUS;
+                            case 0x2003:
+                                throw new Exception("Cannot 'get' OAMADDR");
+                            case 0x2004:
+                                return this.ppu.OAMDATA;
+                            case 0x2005:
+                                throw new Exception("Cannot 'get' PPUSCROLL");
+                            case 0x2006:
+                                throw new Exception("Cannot 'get' PPUADDR");
+                            case 0x2007:
+                                return this.ppu.PPUDATA;
+                            default:
+                                break;
+                        }
                         return this.storage[this.Map(index)];
                     }
                     return this.GetSpecial(index);
@@ -49,6 +72,36 @@ namespace NesEmulator
                 {
                     if (index >= 0)
                     {
+
+                        switch (this.Map(index))
+                        {
+                            case 0x2000:
+                                this.ppu.PPUCTRL = value;
+                                return;
+                            case 0x2001:
+                                this.ppu.PPUMASK = value;
+                                return;
+                            case 0x2002:
+                                throw new Exception("Cannot 'set' PPUSTATUS");
+                            case 0x2003:
+                                this.ppu.OAMADDR = value;
+                                return;
+                            case 0x2004:
+                                this.ppu.OAMDATA = value;
+                                return;
+                            case 0x2005:
+                                this.ppu.PPUSCROLL = value;
+                                return;
+                            case 0x2006:
+                                this.ppu.PPUADDR = value;
+                                return;
+                            case 0x2007:
+                                this.ppu.PPUDATA = value;
+                                return;
+                            default:
+                                break;
+                        }
+
                         this.storage[this.Map(index)] = value;
                     }
                     else

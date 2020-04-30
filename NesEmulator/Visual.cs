@@ -16,12 +16,15 @@ namespace NesEmulator
         private const int height = 0xf0;
         private const double scale = 2;
 
-        public Visual(int[] rawBitmap)
+        private NES nes;
+
+        public Visual(NES nes)
         {
             InitializeComponent();
             this.Size = new Size((int) (scale * width), (int) (scale * height));
-             
-            this.rawBitmap = rawBitmap;
+
+            this.nes = nes;
+            this.rawBitmap = nes.display;
 
             // disable resizing
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -47,7 +50,14 @@ namespace NesEmulator
 
         void Visual_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Left)
+            if (e.KeyCode == Keys.Add)
+            {
+                lock (this.nes)
+                {
+                    this.nes.NextPalette();
+                }
+            }
+            else if (e.KeyCode == Keys.Left)
                 Console.WriteLine("Key pressed");
             else if (e.KeyCode == Keys.Right)
                 Console.WriteLine("Key pressed");
@@ -82,7 +92,7 @@ namespace NesEmulator
                 lock (this.rawBitmap)
                 {
                     _rawBitmap = GCHandle.Alloc(this.rawBitmap, GCHandleType.Pinned);
-                    this.Backbuffer = new Bitmap(width, height, width * 3,
+                    this.Backbuffer = new Bitmap(width, height, width * 4,
                                 PixelFormat.Format32bppRgb, _rawBitmap.AddrOfPinnedObject());
                 }
 

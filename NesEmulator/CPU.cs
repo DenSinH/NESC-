@@ -53,13 +53,13 @@ namespace NesEmulator
 
     }
 
-    partial class CPU
+    public partial class CPU
     {
-        private const bool makeLog = true;
+        private const bool makeLog = false;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-
+        
         public CPUMEM mem;
-        private int cycle;
+        public int cycle;
         private bool kil = false;
 
         private int oper;
@@ -74,7 +74,6 @@ namespace NesEmulator
             this.cycle = 7; // todo: cpu boot sequence
 
             // load opcodes
-
             string opcodeJson = File.ReadAllText("../../data/AllOpcodes.json");
             Dictionary<string, string> opcodes = JsonConvert.DeserializeObject<Dictionary<string, string>>(opcodeJson);
 
@@ -182,18 +181,23 @@ namespace NesEmulator
                     this.instructions[int.Parse(entry.Key, NumberStyles.HexNumber)] = new InstructionCaller(instruction, mode);
                 }
             }
-
         }
 
-        private void log(string message)
+        public void SetPPU(PPU ppu)
+        {
+            this.mem.ppu = ppu;
+        }
+
+        private void Log(string message)
         {
             // for logging results
-            logger.Debug(message);
+            // logger.Debug(message);
             Console.WriteLine(message);
         }
 
         public void RESET()
         {
+            // Interrupt information from https://www.pagetable.com/?p=410
             this.mem.push(this.mem[0x100]);
             this.mem.push(this.mem[0x1ff]);
             this.mem.push(this.mem[0x1fe]);
@@ -205,25 +209,26 @@ namespace NesEmulator
             this.cycle = 7;
         }
 
-        public void IRQ()
+        public int IRQ()
         {
+            // Interrupt information from https://www.pagetable.com/?p=410
             this.mem.push(this.mem.pc[0]);
             this.mem.push(this.mem.pc[1]);
-            this.mem.push((byte)((this.mem.sr & 0b1110_1111) + 0b0010_0000));
+            this.mem.push((byte)((this.mem.sr & 0b1110_1111) | 0b0010_0100));
             this.mem.setPc(this.mem[this.mem.irqVector[0]], this.mem[this.mem.irqVector[1]]);
+
+            return 8;
         }
 
-        public void NMI()
+        public int NMI()
         {
+            // Interrupt information from https://www.pagetable.com/?p=410
             this.mem.push(this.mem.pc[0]);
             this.mem.push(this.mem.pc[1]);
-            this.mem.push((byte)((this.mem.sr & 0b1110_1111) + 0b0010_0000));
+            this.mem.push((byte)((this.mem.sr & 0b1110_1111) | 0b0010_0100));
             this.mem.setPc(this.mem[this.mem.nmiVector[0]], this.mem[this.mem.nmiVector[1]]);
-        }
 
-        public int GetCycle()
-        {
-            return this.cycle;
+            return 8;
         }
 
         public void SetPc(int val)
@@ -236,11 +241,11 @@ namespace NesEmulator
         {
             while (!this.kil)
             {
-                this.cycle += this.step();
+                this.cycle += this.Step();
             }
         }
 
-        public int step()
+        public int Step()
         {
             int opcode = this.mem.getCurrent();
             this.mem.incrPc();
@@ -317,7 +322,7 @@ namespace NesEmulator
             }
             if (makeLog)
             {
-                this.log(
+                this.Log(
                     string.Format(
                         "    {0}  {1:x2} {2}: {3,5}\t\t{4}     A:{5:x2} X:{6:x2} Y:{7:x2} P:{8:x2} SP:{9:x2}        CYC:{10}",
                         (this.mem.getPc() - 1).ToString("x2"),
