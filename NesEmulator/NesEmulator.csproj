@@ -61,6 +61,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Auxiliary.cs" />
     <Compile Include="Cartridge.cs" />
     <Compile Include="CPU.Instructions.cs" />
     <Compile Include="NES.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="CPU.cs" />
     <Compile Include="CPU.Memory.cs" />
     <Compile Include="PPU.Registers.cs" />
+    <Compile Include="PPU.Render.cs" />
     <Compile Include="Visual.cs">
       <SubType>Form</SubType>
     </Compile>

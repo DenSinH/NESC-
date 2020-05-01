@@ -31,8 +31,9 @@ namespace NesEmulator
             // assume cartridge is loaded
             this.cpu.RESET();
 
-            // temporary
+            // for only testing cpu on nestest.nes:
             // this.cpu.SetPc(0xc000);
+
             int cycles = 0;
             int dcycles;
             while (true)
@@ -64,7 +65,7 @@ namespace NesEmulator
                     {
                         for (int x = 0; x < 32; x++)
                         {
-                            Console.Write(this.ppu.VRAM[y * 32 + x]);
+                            Console.Write(this.ppu.VRAM[y * 32 + x].ToString("x2") + " ");
                         }
                         Console.WriteLine();
                     }
@@ -74,7 +75,6 @@ namespace NesEmulator
                     {
                         Console.WriteLine(this.ppu.PaletteRAM[i]);
                     }
-                    Console.ReadKey();
                 }
 
             }

@@ -22,8 +22,25 @@ namespace NesEmulator
                 }
                 else if (index < 0x3f00)
                 {
-                    // todo: Mirroring, currently default horizontal
-                    return this.VRAM[index % 0x1000];
+                    index %= 0x1000;
+
+                    // todo: Mirroring, currently default Horizontal
+                    switch (this.Mirror)
+                    {
+                        case MirrorType.Horizontal:
+                            if (index < 0x800)
+                            {
+                                return this.VRAM[index % 0x400];
+                            }
+                            else
+                            {
+                                return this.VRAM[0x800 + (index % 0x400)];
+                            }
+                        case MirrorType.Vertical:
+                            return this.VRAM[index % 0x800];
+                        default:
+                            throw new Exception("Unknown mirroring type: " + this.Mirror);
+                    }
                 }
                 else if (index < 0x4000)
                 {
@@ -53,8 +70,26 @@ namespace NesEmulator
                 }
                 else if (index < 0x3f00)
                 {
+                    index %= 0x1000;
+
                     // todo: Mirroring, currently default Horizontal
-                    this.VRAM[index % 0x1000] = value;
+                    switch (this.Mirror)
+                    {
+                        case MirrorType.Horizontal:
+                            if (index < 0x800)
+                            {
+                                this.VRAM[index % 0x400] = value;
+                            } else
+                            {
+                                this.VRAM[0x800 + (index % 0x400)] = value;
+                            }
+                            break;
+                        case MirrorType.Vertical:
+                            this.VRAM[index % 0x800] = value;
+                            break;
+                        default:
+                            throw new Exception("Unknown mirroring type: " + this.Mirror);
+                    }
                 }
                 else if (index < 0x4000)
                 {

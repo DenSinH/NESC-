@@ -6,14 +6,43 @@ namespace NesEmulator
     class Cartridge
     {
         private string filename;
+        private FileStream fs;
 
         private byte PRGsize, CHRSize;
-        private bool mirroring, BatteryPackedPRGRam;
+        private bool BatteryPackedPRGRam;
+        private MirrorType Mirror;
         private byte mapper;
 
         public Cartridge(string filename)
         {
             this.filename = filename;
+            this.fs = File.OpenRead(filename);
+
+            for (int i = 0; i < 4; i++)
+            {
+                // NES\n Header
+                fs.ReadByte();
+            }
+
+            this.PRGsize = (byte)this.fs.ReadByte();
+            this.CHRSize = (byte)this.fs.ReadByte();
+
+            byte Flags6 = (byte)this.fs.ReadByte();
+
+            if ((Flags6 & 0x01) == 0)
+            {
+                this.Mirror = MirrorType.Horizontal;
+            } else
+            {
+                this.Mirror = MirrorType.Vertical;
+            }
+
+            // FLAGS, Not implemented
+
+            for (int i = 0; i < 9; i++)
+            {
+                fs.ReadByte();
+            }
         }
 
         public void LoadTo(NES nes)
@@ -23,36 +52,22 @@ namespace NesEmulator
 
         public void LoadTo(CPU cpu, PPU ppu)
         {
-            // load rom into memory
-            using (FileStream fs = File.OpenRead(filename))
-            {
-                for (int i = 0; i < 4; i++)
-                {
-                    // NES\n Header
-                    fs.ReadByte();
-                }
+            ppu.SetMirrorType(this.Mirror);
 
-                this.PRGsize = (byte)fs.ReadByte();
-                this.CHRSize = (byte)fs.ReadByte();
+            // load rom into memory  
 
-                // FLAGS, Not implemented
+            this.xNROM(cpu, ppu);
 
-                for (int i = 0; i < 10; i++)
-                {
-                    fs.ReadByte();
-                }
-
-                this.xNROM(fs, cpu, ppu);
-            }
+            this.fs.Close();
         }
 
-        private void xNROM(FileStream fs, CPU cpu, PPU ppu)
+        private void xNROM(CPU cpu, PPU ppu)
         {
             // todo: PRG RAM
 
             for (int i = 0; i < 0x4000; i++)
             {
-                cpu.mem[0x8000 + i] = (byte)fs.ReadByte();
+                cpu.mem[0x8000 + i] = (byte)this.fs.ReadByte();
                 if (this.PRGsize == 1)
                 {
                     cpu.mem[0xc000 + i] = cpu.mem[0x8000 + i];
@@ -63,7 +78,7 @@ namespace NesEmulator
             {
                 for (int i = 0; i < 0x4000; i++)
                 {
-                    cpu.mem[0xc000 + i] = (byte)fs.ReadByte();
+                    cpu.mem[0xc000 + i] = (byte)this.fs.ReadByte();
                 }
             }
 
@@ -71,7 +86,7 @@ namespace NesEmulator
             {
                 for (int i = 0; i < 0x2000; i++)
                 {
-                    ppu[i] = (byte)fs.ReadByte();
+                    ppu[i] = (byte)this.fs.ReadByte();
                 }
             }
 

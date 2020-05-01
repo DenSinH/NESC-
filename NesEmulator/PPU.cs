@@ -10,6 +10,8 @@ namespace NesEmulator
         private int scanline = 0;
         private int cycle = 0;
 
+        private MirrorType Mirror;
+
         public bool ThrowNMI = false;
         public bool FinishedFrame = false;
         private bool OddFrame = false;
@@ -34,91 +36,9 @@ namespace NesEmulator
             this.cpu = cpu;
         }
 
-        public void Step()
+        public void SetMirrorType(MirrorType m)
         {
-            if (this.scanline == -1 && this.cycle == 1)
-            {
-                // Set VBlank flag to 0 for pre-render line
-                this.VBlank = 0;
-            }
-            else if (this.scanline == 241 && this.cycle == 1)
-            {
-                // set VBlank flag to 1 on post-render line
-                this.VBlank = 1;
-                if (this.NMIEnable == 1)
-                {
-                    this.ThrowNMI = true;
-                }
-
-                this.FinishedFrame = true;
-                this.OddFrame ^= true;
-            }
-
-            // if rendering is enabled
-            if (cycle == 256)
-            {
-                IncrementCourseY();
-            }
-            else if (cycle == 257)
-            {
-                NTX = TNTX;
-                CourseX = TCourseX;
-            }
-            else if ((280 <= cycle) && (cycle <= 304))
-            {
-                FineY = TFineY;
-                CourseY = TCourseY;
-                NTY = TNTY;
-            }
-            else if ((cycle == 328) || (cycle == 336) || ((cycle < 256) && ((cycle % 8) == 0)))
-            {
-                IncrementCourseX();
-            }
-
-            cycle++;
-            if (cycle > 340)
-            {
-                cycle = 0;
-                scanline++;
-                if (scanline > 260)
-                {
-                    scanline = -1;
-                }
-            }
-
+            this.Mirror = m;
         }
-
-        // todo: change to private
-        public void drawSpriteTable(byte left, byte PaletteNumber)
-        {
-            byte lower, upper;
-            int PaletteIndex;
-
-            for (int SpriteTableTileY = 0; SpriteTableTileY < 0x10; SpriteTableTileY++)
-            {
-                for (int SpriteTableTileX = 0; SpriteTableTileX < 0x10; SpriteTableTileX++)
-                {
-                    for (int row = 0; row < 8; row++)
-                    {
-                        lower = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row];
-                        upper = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row + 8];
-
-                        for (byte bit = 0; bit < 8; bit++)
-                        {
-                            PaletteIndex = this[0x3f00 + 4 * PaletteNumber + (upper & 0x01) + (lower & 0x01)];
-                            upper >>= 1;
-                            lower >>= 1;
-
-                            lock (this.display)
-                            {
-                                this.display[8 * SpriteTableTileX + (7 - bit) + 0x100 * (8 * SpriteTableTileY + row)] = this.palette[PaletteIndex];
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
-
     }
 }

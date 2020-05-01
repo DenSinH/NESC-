@@ -32,7 +32,7 @@ namespace NesEmulator
             Cartridge nestest = new Cartridge("../../roms/nestest.nes");
             nestest.LoadTo(nes);
 
-            nes.Run(true);
+            nes.Run(false);
 
         }
 

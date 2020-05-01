@@ -28,11 +28,24 @@ namespace NesEmulator
         }
 
         // ignored for now
-        byte ColorEmphasis, SpriteEnable, BGEnable, SpriteLeftColumnEnable, BGLeftColumnEnable, Greyscale;
+        byte BlueEmphasis, GreenEmphasis, RedEmphasis, SpriteEnable, BGEnable, SpriteLeftColumnEnable, BGLeftColumnEnable, Greyscale;
 
         /*  $2001  */
-        public byte PPUMASK;     // BGRs bMmG: color emphasis (BGR), sprite enable (s), background enable (b), sprite left column enable (M),
-                                 // background left column enable (m), greyscale (G)
+        public byte PPUMASK         // BGRs bMmG: color emphasis (BGR), sprite enable (s), background enable (b), sprite left column enable (M),
+        {                           // background left column enable (m), greyscale (G)
+            // Write Only
+            set
+            {
+                BlueEmphasis = (byte)(value >> 7);
+                GreenEmphasis = (byte)((value >> 6) & 0x01);
+                RedEmphasis = (byte)((value >> 5) & 0x01);
+                SpriteEnable = (byte)((value >> 4) & 0x01);
+                BGEnable = (byte)((value >> 3) & 0x01);
+                SpriteLeftColumnEnable = (byte)((value >> 2) & 0x01);
+                BGLeftColumnEnable = (byte)((value >> 1) & 0x01);
+                Greyscale = (byte)(value & 0x01);
+            }
+        } 
 
         byte VBlank, Sprite0Hit, SpriteOverflow;
 
@@ -154,7 +167,6 @@ namespace NesEmulator
             else
             {
                 FineY = 0;                                  // fine Y = 0
-                UInt16 y = (UInt16)((V & 0x03E0) >> 5);     // let y = coarse Y
                 if (CourseY == 29)
                 {
                     CourseY = 0;                            // coarse Y = 0
