@@ -7,14 +7,7 @@ namespace NesEmulator
         CPU cpu;
         private int[] display;
 
-        private int scanline = 0;
-        private int cycle = 0;
-
         private MirrorType Mirror;
-
-        public bool ThrowNMI = false;
-        public bool FinishedFrame = false;
-        private bool OddFrame = false;
 
         readonly int[] palette = {
             0x7C7C7C, 0x0000FC, 0x0000BC, 0x4428BC, 0x940084, 0xA80020, 0xA81000, 0x881400, 0x503000, 0x007800,

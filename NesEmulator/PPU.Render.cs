@@ -8,6 +8,13 @@ namespace NesEmulator
 {
     partial class PPU
     {
+        public bool ThrowNMI = false;
+        public bool FinishedFrame = false;
+        bool OddFrame = false;
+
+        private int scanline = 0;
+        private int cycle = 0;
+
         byte BGNextTileID;
         byte BGNextTileAttribute;
 
@@ -44,8 +51,8 @@ namespace NesEmulator
             if ((x >= 0) && (x < 0x100) && (y >= 0) && (y < 0xf0))
             { 
                 this.display[0x100 * y + x] = this.palette[
-                        this.PaletteRAM[(PaletteStart << 2) + PaletteInternal]
-                ];
+                            this[0x3f00 + (PaletteStart << 2) + PaletteInternal] & 0x3f
+                    ];
             }
             
         }
@@ -57,7 +64,7 @@ namespace NesEmulator
                 // Pre-render scanline
                 if (this.cycle == 1)
                 {
-                    // Set VBlank flag to 0 on first cycle
+                    // Set VBlank flag to 0 on second cycle
                     this.VBlank = 0;
                 }
                 else if ((280 <= cycle) && (cycle <= 304))
@@ -67,25 +74,25 @@ namespace NesEmulator
                     CourseY = TCourseY;
                     NTY = TNTY;
                 }
-                else if (this.cycle == 339)
-                {
-                    // Odd frame skip (currently every frame)
-                    this.cycle = 0;
-                    this.scanline = 0;
-                    return;
-                }
             }
+
             if (this.scanline < 240)
             {
                 // Visible scanlines and pre-render line
                 if (this.cycle == 0)
                 {
                     // Idle cycle
+                    if ((this.scanline == 0) && this.OddFrame)
+                    {
+                        // Odd frame skip
+                        this.cycle = 1;
+                    }
                 }
                 else if ((this.cycle <= 256) || (this.cycle >= 321 && this.cycle <= 336))
                 {
                     ShiftBGShifters();
 
+                    // More detailed, see diagram: https://wiki.nesdev.com/w/images/4/4f/Ppu.svg
                     switch (this.cycle % 8)
                     {
                         case 1:
@@ -144,7 +151,7 @@ namespace NesEmulator
                             BGNextPatternHigh = this[
                                 (BGTileSelect << 12) +  // pattern table $0000 or $1000
                                 (BGNextTileID << 4) +
-                                (FineY)
+                                (FineY + 8)             // 8 below is high byte
                                 ];
                             break;
 
@@ -199,6 +206,7 @@ namespace NesEmulator
                     // hori(v) == hori(t)
                     NTX = TNTX;
                     CourseX = TCourseX;
+                    LoadBGShifterNext();
                 }
                 else if ((cycle == 328) || (cycle == 336) || ((cycle < 256) && ((cycle % 8) == 0)))
                 {
@@ -227,7 +235,7 @@ namespace NesEmulator
 
                 BGPalette = (byte)((BGPaletteHigh << 1) | BGPaletteLow);
 
-                // todo: paletteram is fucked up
+                // todo: paletteram is messed up
                 this.SetPixel(this.cycle - 1, this.scanline, BGPalette, BGPixel);
             }
 
@@ -244,11 +252,11 @@ namespace NesEmulator
             }
         }
 
-        // todo: change to private
+        // for testing purposes
+        // draws spritetable 0 and palette on screen
         public void drawSpriteTable(byte left, byte PaletteNumber)
         {
             byte lower, upper;
-            int PaletteIndex;
 
             for (int SpriteTableTileY = 0; SpriteTableTileY < 0x10; SpriteTableTileY++)
             {
@@ -261,20 +269,26 @@ namespace NesEmulator
 
                         for (byte bit = 0; bit < 8; bit++)
                         {
-                            PaletteIndex = this[0x3f00 + 4 * PaletteNumber + 2 * (upper & 0x01) + (lower & 0x01)];
+                            this.SetPixel(8 * SpriteTableTileX + (7 - bit), (8 * SpriteTableTileY + row), PaletteNumber, (upper & 0x01) + (lower & 0x01));
+
                             upper >>= 1;
                             lower >>= 1;
-
-                            lock (this.display)
-                            {
-                                this.display[8 * SpriteTableTileX + (7 - bit) + 0x100 * (8 * SpriteTableTileY + row)] = this.palette[PaletteIndex];
-                            }
                         }
 
                     }
                 }
             }
-        }
 
+            for (int i = 0; i < 0x20; i++)
+            {
+                for (int y = 0; y < 8; y++)
+                {
+                    this.SetPixel(16 * 8 + 4 * i, y, i >> 2, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 1, y, i >> 2, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 2, y, i >> 2, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 3, y, i >> 2, i % 4);
+                }
+             }
+        }
     }
 }

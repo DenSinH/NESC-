@@ -12,7 +12,7 @@ namespace NesEmulator
 
     public partial class CPU
     {
-        private const byte makeLog = 0;  // 0: no log | 1: Console | 2: File + Console
+        private const byte makeLog = 2;  // 0: no log | 1: Console | 2: File + Console
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         
         public CPUMEM mem;
@@ -108,9 +108,8 @@ namespace NesEmulator
                     case "TXS": instruction = this.TXS; break;
                     case "TYA": instruction = this.TYA; break;
                     case "XAA": instruction = this.XAA; break;
-                    case "JSR":
-                    case "JMP":
-                        instruction = null; break;
+                    case "JSR": instruction = this.JSR; break;
+                    case "JMP": instruction = this.JMP; break;
                     default: throw new Exception("Unknown instruction: " + instructionString[0]);
                 }
 
@@ -211,68 +210,6 @@ namespace NesEmulator
             int opcode = this.mem.getCurrent();
             this.mem.incrPc();
 
-            /*
-            * JMP and JSR instructions work slightly differently,
-            * as we need to operate on 2 bytes instead of a memory address
-            */
-
-            if (opcode == 0x4c || opcode == 0x6c)
-            {
-                /*
-                JMP  Jump to New Location
-                    (PC+1) -> PCL                    N Z C I D V
-                    (PC+2) -> PCH                    - - - - - -
-                    addressing    assembler    opc  bytes  cyles
-                    --------------------------------------------
-                    absolute      JMP oper      4C    3     3
-                    indirect      JMP (oper)    6C    3     5
-                */
-                byte ll = this.mem.getCurrent();
-                this.mem.incrPc();
-                byte hh = this.mem.getCurrent();
-                this.mem.incrPc();
-
-                switch (opcode)
-                {
-                    case 0x4c:
-                        {
-                            this.mem.setPc(ll, hh);
-                            return 3;
-                        }
-                    case 0x6c:
-                        {
-                            // indirect wraps around with the lower byte. This is a glitch/feature in the MOS6502 processor
-                            this.mem.setPc(
-                                    this.mem[hh * 0x100 + ll],
-                                    this.mem[hh * 0x100 + ((ll + 1) % 0x100)]
-                            );
-                            return 5;
-                        }
-                    default: break;
-                }
-            }
-            else if (opcode == 0x20)
-            {
-                /*
-                JSR  Jump to New Location Saving Return Address
-                    push (PC+2),                     N Z C I D V
-                    (PC+1) -> PCL                    - - - - - -
-                    (PC+2) -> PCH
-                    addressing    assembler    opc  bytes  cyles
-                    --------------------------------------------
-                    absolute      JSR oper      20    3     6
-                */
-                byte v = (byte)(this.mem.pc[1] + 1 > 0xff ? 1 : 0);
-                this.mem.push((byte)(this.mem.pc[0] + v));
-                this.mem.push((byte)(this.mem.pc[1] + 1));
-
-                byte ll = this.mem.getCurrent();
-                this.mem.incrPc();
-                byte hh = this.mem.getCurrent();
-                this.mem.setPc(ll, hh);
-                return 6;
-            }
-
             InstructionCaller ic = this.instructions[opcode];
 
             if (ic == null)
@@ -360,7 +297,14 @@ namespace NesEmulator
                     return;
 
                 case 6:  // ind, only used by JMP
-                    break;
+                    ll = this.mem.getCurrent();
+                    this.mem.incrPc();
+                    hh = this.mem.getCurrent();
+                    this.mem.incrPc();
+
+                    this.oper = 0x100 * hh + ll;
+                    this.pageChange = (byte)0;
+                    return;
 
                 case 7:  // X,ind
                     ll = this.mem.getCurrent();

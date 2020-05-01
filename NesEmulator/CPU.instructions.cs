@@ -725,6 +725,56 @@ namespace NesEmulator
             throw new Exception("mode '" + mode + "' invalid for instruction");
         }
 
+        private int JMP(byte mode)
+        {
+            /*
+            JMP  Jump to New Location
+                (PC+1) -> PCL                    N Z C I D V
+                (PC+2) -> PCH                    - - - - - -
+                addressing    assembler    opc  bytes  cyles
+                --------------------------------------------
+                absolute      JMP oper      4C    3     3
+                indirect      JMP (oper)    6C    3     5
+            */
+            switch (mode)
+            {
+                case 1:
+                    {
+                        this.mem.setPc((byte)(this.oper & 0xff), (byte)(this.oper >> 8));
+                        return 3;
+                    }
+                case 6:
+                    {
+                        // indirect wraps around with the lower byte. This is a glitch/feature in the MOS6502 processor
+                        this.mem.setPc(
+                                this.mem[this.oper],
+                                this.mem[(this.oper >> 8) * 0x100 + (((this.oper & 0xff) + 1) % 0x100)]
+                        );
+                        return 5;
+                    }
+                default: throw new Exception("mode '" + mode + "' invalid for instruction");
+            }
+        }
+
+        private int JSR (byte mode)
+        {
+            /*
+            JSR  Jump to New Location Saving Return Address
+                push (PC+2),                     N Z C I D V
+                (PC+1) -> PCL                    - - - - - -
+                (PC+2) -> PCH
+                addressing    assembler    opc  bytes  cyles
+                --------------------------------------------
+                absolute      JSR oper      20    3     6
+            */
+            byte v = (byte)(this.mem.pc[1] - 1 < 0 ? -1 : 0);
+            this.mem.push((byte)(this.mem.pc[0] + v));
+            this.mem.push((byte)(this.mem.pc[1] - 1));
+
+            this.mem.setPc((byte)(this.oper & 0xff), (byte)(this.oper >> 8));
+            return 6;
+        }
+
         private int LDA(byte mode)
         {
             /*

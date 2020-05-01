@@ -46,19 +46,24 @@ namespace NesEmulator
                         switch (this.Map(index))
                         {
                             case 0x2000:
-                                throw new Exception("Cannot 'get' PPUCTRL");
+                                break;
+                                // throw new Exception("Cannot 'get' PPUCTRL");
                             case 0x2001:
-                                throw new Exception("Cannot 'get' PPUMASK");
+                                break;
+                                // throw new Exception("Cannot 'get' PPUMASK");
                             case 0x2002:
                                 return this.ppu.PPUSTATUS;
                             case 0x2003:
-                                throw new Exception("Cannot 'get' OAMADDR");
+                                break;
+                                // throw new Exception("Cannot 'get' OAMADDR");
                             case 0x2004:
                                 return this.ppu.OAMDATA;
                             case 0x2005:
-                                throw new Exception("Cannot 'get' PPUSCROLL");
+                                break;
+                                // throw new Exception("Cannot 'get' PPUSCROLL");
                             case 0x2006:
-                                throw new Exception("Cannot 'get' PPUADDR");
+                                break;
+                                // throw new Exception("Cannot 'get' PPUADDR");
                             case 0x2007:
                                 return this.ppu.PPUDATA;
                             default:
@@ -82,7 +87,8 @@ namespace NesEmulator
                                 this.ppu.PPUMASK = value;
                                 return;
                             case 0x2002:
-                                throw new Exception("Cannot 'set' PPUSTATUS");
+                                break;
+                                // throw new Exception("Cannot 'set' PPUSTATUS");
                             case 0x2003:
                                 this.ppu.OAMADDR = value;
                                 return;

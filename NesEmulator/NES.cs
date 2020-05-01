@@ -32,7 +32,8 @@ namespace NesEmulator
             this.cpu.RESET();
 
             // for only testing cpu on nestest.nes:
-            // this.cpu.SetPc(0xc000);
+            this.cpu.SetPc(0xc000);
+            this.cpu.Run();
 
             int cycles = 0;
             int dcycles;
@@ -46,7 +47,9 @@ namespace NesEmulator
                 {
                     this.ppu.ThrowNMI = false;
                     dcycles = this.cpu.NMI();
+                    Console.WriteLine("NMI THROWN");
                 }
+
                 cycles += dcycles;
                 this.cpu.cycle += dcycles;
 
@@ -61,20 +64,20 @@ namespace NesEmulator
                     cycles -= 26_666;
                     this.ppu.drawSpriteTable(0, this.PaletteSelect);
 
-                    for (int y = 0; y < 30; y++)
-                    {
-                        for (int x = 0; x < 32; x++)
-                        {
-                            Console.Write(this.ppu.VRAM[y * 32 + x].ToString("x2") + " ");
-                        }
-                        Console.WriteLine();
-                    }
-                    Console.WriteLine();
+                    //for (int y = 0; y < 30; y++)
+                    //{
+                    //    for (int x = 0; x < 32; x++)
+                    //    {
+                    //        Console.Write(this.ppu.VRAM[y * 32 + x].ToString("x2") + " ");
+                    //    }
+                    //    Console.WriteLine();
+                    //}
+                    //Console.WriteLine();
 
-                    for (int i = 0; i < 0x20; i++)
-                    {
-                        Console.WriteLine(this.ppu.PaletteRAM[i]);
-                    }
+                    //for (int i = 0; i < 0x20; i++)
+                    //{
+                    //    Console.WriteLine(this.ppu.PaletteRAM[i]);
+                    //}
                 }
 
             }
