@@ -85,6 +85,14 @@ namespace NesEmulator
                         NTY = TNTY;
                     }
                 }
+                else if (cycle == 339)
+                {
+                    if ((this.scanline == 0) && this.OddFrame)
+                    {
+                        // odd frame skip
+                        this.cycle = 340;
+                    }
+                }
             }
 
             if (this.scanline < 240)
@@ -93,11 +101,6 @@ namespace NesEmulator
                 if (this.cycle == 0)
                 {
                     // Idle cycle
-                    //if ((this.scanline == 0) && this.OddFrame)
-                    //{
-                    //    // Odd frame skip
-                    //    this.cycle = 1;
-                    //}
                 }
                 else if ((this.cycle <= 256) || (this.cycle >= 321 && this.cycle <= 337))
                 {
@@ -150,7 +153,7 @@ namespace NesEmulator
                             break;
                         case 5:
                             // Fetch background pattern low byte
-                            BGNextPatternHigh = this[
+                            BGNextPatternLow = this[
                                 (BGTileSelect << 12) +  // pattern table $0000 or $1000
                                 (BGNextTileID << 4) +
                                 (FineY)
@@ -179,6 +182,29 @@ namespace NesEmulator
                 {
                     // Ignored Nametable Fetches
                 }
+
+                // if rendering is enabled (from https://wiki.nesdev.com/w/index.php/PPU_scrolling#At_dot_256_of_each_scanline)
+                if ((SpriteEnable == 1) || (BGEnable == 1))
+                {
+                    if (cycle == 256)
+                    {
+                        // inc vert(v)
+                        IncrementCourseY();
+                    }
+                    else if (cycle == 257)
+                    {
+                        // hori(v) == hori(t)
+                        NTX = TNTX;
+                        CourseX = TCourseX;
+                        LoadBGShifterNext();
+                    }
+                    else if ((cycle == 328) || (cycle == 336) || ((cycle < 256) && (cycle > 0) && ((cycle % 8) == 0)))
+                    {
+                        // Inc hori(v)
+                        IncrementCourseX();
+                    }
+                }
+
             }
             else if (this.scanline == 240)
             {
@@ -202,28 +228,6 @@ namespace NesEmulator
             else
             {
                 // VBlank lines
-            }
-
-            // if rendering is enabled (from https://wiki.nesdev.com/w/index.php/PPU_scrolling#At_dot_256_of_each_scanline)
-            if ((SpriteEnable == 1) || (BGEnable == 1))
-            {
-                if (cycle == 256)
-                {
-                    // inc vert(v)
-                    IncrementCourseY();
-                }
-                else if (cycle == 257)
-                {
-                    // hori(v) == hori(t)
-                    NTX = TNTX;
-                    CourseX = TCourseX;
-                    LoadBGShifterNext();
-                }
-                else if ((cycle == 328) || (cycle == 336) || ((cycle < 256) && (cycle > 0) && ((cycle % 8) == 0)))
-                {
-                    // Inc hori(v)
-                    IncrementCourseX();
-                }
             }
 
             byte BGPattern;  // value of the pixel to be rendered, calculated from the patterns (values 00, 01, 10, 11)
@@ -260,46 +264,6 @@ namespace NesEmulator
                     scanline = -1;
                 }
             }
-        }
-
-        // for testing purposes
-        // draws spritetable 'left' and palette on screen
-        public void drawSpriteTable(byte left, byte PaletteNumber)
-        {
-            byte lower, upper;
-
-            for (int SpriteTableTileY = 0; SpriteTableTileY < 0x10; SpriteTableTileY++)
-            {
-                for (int SpriteTableTileX = 0; SpriteTableTileX < 0x10; SpriteTableTileX++)
-                {
-                    for (int row = 0; row < 8; row++)
-                    {
-                        lower = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row];
-                        upper = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row + 8];
-
-                        for (byte bit = 0; bit < 8; bit++)
-                        {
-                            this.SetPixel(8 * SpriteTableTileX + (7 - bit), (8 * SpriteTableTileY + row),
-                                PaletteNumber / 4, PaletteNumber % 4, (upper & 0x01) + (lower & 0x01));
-
-                            upper >>= 1;
-                            lower >>= 1;
-                        }
-
-                    }
-                }
-            }
-
-            for (int i = 0; i < 0x20; i++)
-            {
-                for (int y = 0; y < 8; y++)
-                {
-                    this.SetPixel(16 * 8 + 4 * i, y, i >> 4, (i >> 2) & 0x03, i % 4);
-                    this.SetPixel(16 * 8 + 4 * i + 1, y, i >> 4, (i >> 2) & 0x03, i % 4);
-                    this.SetPixel(16 * 8 + 4 * i + 2, y, i >> 4, (i >> 2) & 0x03, i % 4);
-                    this.SetPixel(16 * 8 + 4 * i + 3, y, i >> 4, (i >> 2) & 0x03, i % 4);
-                }
-             }
         }
     }
 }

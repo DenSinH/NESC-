@@ -67,5 +67,74 @@ namespace NesEmulator
             Console.WriteLine();
         }
 
+        public void DrawNametable(int NT, int PT)
+        {
+            for (int x = 0; x < 32; x++)
+            {
+                for (int y = 0; y < 30; y++)
+                {
+                    int TilePatternID = this.VRAM[NT * 0x800 + 32 * y + x];
+                    for (int finey = 0; finey < 8; finey++)
+                    {
+                        byte PatternLow = this[0x1000 * PT + (TilePatternID << 4) + finey];
+                        byte PatternHigh = this[0x1000 * PT + (TilePatternID << 4) + finey + 8];
+
+                        for (int finex = 0; finex < 8; finex++)
+                        {
+                            int X = 8 * x + (7 - finex);
+                            int Y = 8 * y + finey;
+
+                            byte paletteinternal = (byte)(2 * (PatternHigh & 0x01) + (PatternLow & 0x01));
+
+                            PatternLow >>= 1;
+                            PatternHigh >>= 1;
+
+                            this.SetPixel(X, Y, 0, 0, paletteinternal);
+
+                        }
+                    }
+                }
+            }
+        }
+
+        // for testing purposes
+        // draws spritetable 'left' and palette on screen
+        public void drawSpriteTable(byte left, byte PaletteNumber)
+        {
+            byte lower, upper;
+
+            for (int SpriteTableTileY = 0; SpriteTableTileY < 0x10; SpriteTableTileY++)
+            {
+                for (int SpriteTableTileX = 0; SpriteTableTileX < 0x10; SpriteTableTileX++)
+                {
+                    for (int row = 0; row < 8; row++)
+                    {
+                        lower = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row];
+                        upper = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row + 8];
+
+                        for (byte bit = 0; bit < 8; bit++)
+                        {
+                            this.SetPixel(8 * SpriteTableTileX + (7 - bit), (8 * SpriteTableTileY + row),
+                                PaletteNumber / 4, PaletteNumber % 4, (upper & 0x01) + (lower & 0x01));
+
+                            upper >>= 1;
+                            lower >>= 1;
+                        }
+
+                    }
+                }
+            }
+
+            for (int i = 0; i < 0x20; i++)
+            {
+                for (int y = 0; y < 8; y++)
+                {
+                    this.SetPixel(16 * 8 + 4 * i, y, i >> 4, (i >> 2) & 0x03, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 1, y, i >> 4, (i >> 2) & 0x03, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 2, y, i >> 4, (i >> 2) & 0x03, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 3, y, i >> 4, (i >> 2) & 0x03, i % 4);
+                }
+            }
+        }
     }
 }

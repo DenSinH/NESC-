@@ -7,7 +7,7 @@ namespace NesEmulator
 {
     public class NES
     {
-        private const byte makeLog = 2;  // 0: no log | 1: Console | 2: File + Console
+        private const byte makeLog = 1;  // 0: no log | 1: Console | 2: File + Console
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public CPU cpu;
@@ -52,33 +52,33 @@ namespace NesEmulator
             // for only testing cpu on nestest.nes:
             //this.cpu.SetPc(0xc000);
             //this.cpu.Run();
-
-            int cycles = 0;
+            
             int dcycles;
             while (true)
             {
-                if (!this.ppu.ThrowNMI)
-                {
-                    dcycles = this.cpu.Step();
-                }
-                else
+
+                dcycles = this.cpu.Step();
+                this.cpu.cycle += dcycles;
+
+                if (this.ppu.ThrowNMI)
                 {
                     this.ppu.ThrowNMI = false;
-                    dcycles = this.cpu.NMI();
+                    this.cpu.cycle += this.cpu.NMI();
                 }
-
-                cycles += dcycles;
-                this.cpu.cycle += dcycles;
+                
 
                 for (int i = 0; i < 3 * dcycles; i++)
                 {
                     this.ppu.Step();
                 }
 
-                if (debug&& (this.cpu.cycle >= 116006))
+                if (debug && (this.cpu.cycle >= 130000)) 
                 {
-                    this.ppu.DumpVRAM();
+                    // this.ppu.DumpVRAM();
                     this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
+                    
+                    // this.ppu.DrawNametable(0, 1);
+                    // this.ppu.drawSpriteTable(1, 0);
                     Console.ReadKey();
                 }
 

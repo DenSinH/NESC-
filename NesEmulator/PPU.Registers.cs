@@ -245,7 +245,7 @@ namespace NesEmulator
                     data = DataBuffer;
                 }
 
-                if (((BGEnable == 1) || (SpriteEnable == 1)))
+                if (((BGEnable == 1) || (SpriteEnable == 1)) && ((this.scanline >= 0) && (this.scanline < 240) && (this.cycle < 256)))
                 {
                     IncrementCourseX();
                     IncrementCourseY();
@@ -261,7 +261,7 @@ namespace NesEmulator
             {
                 this[V] = value;
                 
-                if (((BGEnable == 1) || (SpriteEnable == 1)))
+                if (((BGEnable == 1) || (SpriteEnable == 1)) && ((this.scanline >= 0) && (this.scanline < 240) && (this.cycle < 256)))
                 {
                     IncrementCourseX();
                     IncrementCourseY();

@@ -29,10 +29,10 @@ namespace NesEmulator
 
             // Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
             
-            Cartridge nestest = new Cartridge("../../roms/Diagnostic/nestest.nes");
+            Cartridge nestest = new Cartridge("../../roms/DonkeyKong.nes");
             nestest.LoadTo(nes);
 
-            nes.Run(true);
+            nes.Run(false);
 
         }
 

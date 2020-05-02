@@ -146,12 +146,13 @@ namespace NesEmulator
             InstructionCaller ic = this.instructions[opcode];
 
             return string.Format(
-                        "    {0}  {1:x2} {2}: {3,5}\t\t{4}     A:{5:x2} X:{6:x2} Y:{7:x2} P:{8:x2} SP:{9:x2}        CYC:{10}",
+                        "    {0}  {1:x2} {2}: {3,5}\t\t{4:x2} {5:x2}     A:{6:x2} X:{7:x2} Y:{8:x2} P:{9:x2} SP:{10:x2}        CYC:{11}",
                         this.mem.getPc().ToString("x2"),
                         opcode,
                         ic.getName(), // instruction,
                         ic.mode, // mode,
-                        this.mem.getCurrent().ToString("x2"),
+                        this.mem[this.mem.getPc() + 1].ToString("x2"),
+                        this.mem[this.mem.getPc() + 2].ToString("x2"),
                         this.mem.ac,
                         this.mem.x,
                         this.mem.y,
@@ -193,7 +194,7 @@ namespace NesEmulator
             this.mem.push((byte)((this.mem.sr & 0b1110_1111) | 0b0010_0100));
             this.mem.setPc(this.mem[this.mem.nmiVector[0]], this.mem[this.mem.nmiVector[1]]);
 
-            return 8;
+            return 7;
         }
 
         public void SetPc(int val)
