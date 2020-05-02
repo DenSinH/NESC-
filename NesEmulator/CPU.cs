@@ -4,7 +4,6 @@ using System.IO;
 using System.Globalization;
 
 using Newtonsoft.Json;
-using NLog;
 
 
 namespace NesEmulator
@@ -12,9 +11,6 @@ namespace NesEmulator
 
     public partial class CPU
     {
-        private const byte makeLog = 2;  // 0: no log | 1: Console | 2: File + Console
-        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        
         public CPUMEM mem;
         public int cycle;
         private bool kil = false;
@@ -144,17 +140,26 @@ namespace NesEmulator
             this.mem.ppu = ppu;
         }
 
-        private void Log(string message)
+        public string GenLog()
         {
-            // for logging results
-            if (makeLog > 0)
-            {
-                Console.WriteLine(message);
-                if (makeLog > 1)
-                {
-                    logger.Debug(message);
-                }
-            }        }
+            int opcode = this.mem.getCurrent();
+            InstructionCaller ic = this.instructions[opcode];
+
+            return string.Format(
+                        "    {0}  {1:x2} {2}: {3,5}\t\t{4}     A:{5:x2} X:{6:x2} Y:{7:x2} P:{8:x2} SP:{9:x2}        CYC:{10}",
+                        this.mem.getPc().ToString("x2"),
+                        opcode,
+                        ic.getName(), // instruction,
+                        ic.mode, // mode,
+                        this.mem.getCurrent().ToString("x2"),
+                        this.mem.ac,
+                        this.mem.x,
+                        this.mem.y,
+                        this.mem.sr,
+                        this.mem.sp,
+                        this.cycle
+                    );
+        }
 
         public void RESET()
         {
@@ -217,25 +222,6 @@ namespace NesEmulator
                 // Unknown opcode is interpreted as KIL instruction
                 this.kil = true;
                 return 0;
-            }
-            if (makeLog > 0)
-            {
-                this.Log(
-                    string.Format(
-                        "    {0}  {1:x2} {2}: {3,5}\t\t{4}     A:{5:x2} X:{6:x2} Y:{7:x2} P:{8:x2} SP:{9:x2}        CYC:{10}",
-                        (this.mem.getPc() - 1).ToString("x2"),
-                        opcode,
-                        ic.getName(), // instruction,
-                        ic.mode, // mode,
-                        this.mem.getCurrent().ToString("x2"),
-                        this.mem.ac,
-                        this.mem.x,
-                        this.mem.y,
-                        this.mem.sr,
-                        this.mem.sp,
-                        this.cycle
-                    )
-                );
             }
 
             this.getOper(ic.mode);

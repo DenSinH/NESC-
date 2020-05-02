@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Threading;
 
+using NLog;
+
 namespace NesEmulator
 {
     public class NES
     {
+        private const byte makeLog = 2;  // 0: no log | 1: Console | 2: File + Console
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         public CPU cpu;
         public PPU ppu;
 
@@ -26,14 +31,27 @@ namespace NesEmulator
             this.ppu.SetCPU(this.cpu);
         }
 
-        public void Run(bool PaletteTest)
+        private void Log(string message)
+        {
+            // for logging results
+            if (makeLog > 0)
+            {
+                Console.WriteLine(message);
+                if (makeLog > 1)
+                {
+                    logger.Debug(message);
+                }
+            }
+        }
+
+        public void Run(bool debug)
         {
             // assume cartridge is loaded
             this.cpu.RESET();
 
             // for only testing cpu on nestest.nes:
-            this.cpu.SetPc(0xc000);
-            this.cpu.Run();
+            //this.cpu.SetPc(0xc000);
+            //this.cpu.Run();
 
             int cycles = 0;
             int dcycles;
@@ -47,7 +65,6 @@ namespace NesEmulator
                 {
                     this.ppu.ThrowNMI = false;
                     dcycles = this.cpu.NMI();
-                    Console.WriteLine("NMI THROWN");
                 }
 
                 cycles += dcycles;
@@ -58,26 +75,11 @@ namespace NesEmulator
                     this.ppu.Step();
                 }
 
-                if (PaletteTest && cycles > 26_666)
+                if (debug&& (this.cpu.cycle >= 116006))
                 {
-                    // Would be one frame
-                    cycles -= 26_666;
-                    this.ppu.drawSpriteTable(0, this.PaletteSelect);
-
-                    //for (int y = 0; y < 30; y++)
-                    //{
-                    //    for (int x = 0; x < 32; x++)
-                    //    {
-                    //        Console.Write(this.ppu.VRAM[y * 32 + x].ToString("x2") + " ");
-                    //    }
-                    //    Console.WriteLine();
-                    //}
-                    //Console.WriteLine();
-
-                    //for (int i = 0; i < 0x20; i++)
-                    //{
-                    //    Console.WriteLine(this.ppu.PaletteRAM[i]);
-                    //}
+                    this.ppu.DumpVRAM();
+                    this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
+                    Console.ReadKey();
                 }
 
             }

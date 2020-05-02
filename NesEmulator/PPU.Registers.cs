@@ -146,14 +146,14 @@ namespace NesEmulator
         private void IncrementCourseX()
         /* From https://wiki.nesdev.com/w/index.php/PPU_scrolling#Wrapping_around*/
         {
-            if (CourseX == 31)     // if coarse X == 31
+            if (CourseX == 31)      // if coarse X == 31
             {
-                CourseX = 0;    // coarse X = 0
-                NTX ^= 1;            // switch horizontal nametable
+                CourseX = 0;        // coarse X = 0
+                NTX ^= 1;           // switch horizontal nametable
             }
             else
             {
-                CourseX++;                    // increment coarse X
+                CourseX++;          // increment coarse X
             }
         }
 
@@ -198,8 +198,8 @@ namespace NesEmulator
                 }
                 else
                 {
-                    TFineY = (byte)(value & 0x07);
                     TCourseY = (byte)((value >> 3) & 0x1f);
+                    TFineY = (byte)(value & 0x07);
                     w = 0;
                 }
             }
@@ -213,7 +213,7 @@ namespace NesEmulator
             {
                 if (w == 0)
                 {
-                    TFineY = (byte)((value >> 4) & 0x03);
+                    TFineY = (byte)((value >> 4) & 0x07);
                     TNTY = (byte)((value >> 3) & 0x01);
                     TNTX = (byte)((value >> 2) & 0x01);
                     TCourseY = (byte)((TCourseY & 0x07) | ((value & 0x03) << 3));
@@ -244,13 +244,32 @@ namespace NesEmulator
                     // Pallete RAM can be accessed directly
                     data = DataBuffer;
                 }
-                V += (UInt16)((IncrementMode == 1) ? 32 : 1);
+
+                if (((BGEnable == 1) || (SpriteEnable == 1)))
+                {
+                    IncrementCourseX();
+                    IncrementCourseY();
+                }
+                else
+                {
+                    V += (UInt16)((IncrementMode == 1) ? 32 : 1);
+                }
+
                 return data;
             }
             set
             {
                 this[V] = value;
-                V += (UInt16)((IncrementMode == 1) ? 32 : 1);
+                
+                if (((BGEnable == 1) || (SpriteEnable == 1)))
+                {
+                    IncrementCourseX();
+                    IncrementCourseY();
+                }
+                else
+                {
+                    V += (UInt16)((IncrementMode == 1) ? 32 : 1);
+                }
             }
         }
         

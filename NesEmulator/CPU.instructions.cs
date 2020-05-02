@@ -136,7 +136,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('C') == 0)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }
@@ -162,7 +162,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('C') == 1)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }
@@ -188,7 +188,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('Z') == 1)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }
@@ -240,7 +240,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('N') == 1)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }
@@ -266,7 +266,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('Z') == 0)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }
@@ -292,7 +292,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('N') == 0)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }
@@ -342,7 +342,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('V') == 0)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }
@@ -368,7 +368,7 @@ namespace NesEmulator
             {
                 if (this.mem.getFlag('V') == 1)
                 {
-                    if (this.branch() == 1)
+                    if (this.branch() != 0)
                     {
                         return 4;
                     }

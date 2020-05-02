@@ -33,5 +33,39 @@ namespace NesEmulator
         {
             this.Mirror = m;
         }
+
+        public string GenLog()
+        {
+            return this.scanline + ", " + this.cycle + ", V:  " + this.V.ToString("x4");
+        }
+
+        public void DumpPAL()
+        {
+            for (int i = 0x3f00; i < 0x3f20; i++)
+            {
+                if (i % 0x10 == 0)
+                {
+                    Console.WriteLine();
+                    Console.Write(i.ToString("x4"));
+                }
+                Console.Write(" " + this[i].ToString("x2"));
+            }
+            Console.WriteLine();
+        }
+
+        public void DumpVRAM()
+        {
+            for (int i = 0x2000; i < 0x3000; i++)
+            {
+                if (i % 0x10 == 0)
+                {
+                    Console.WriteLine();
+                    Console.Write(i.ToString("x4"));
+                }
+                Console.Write(" " + this[i].ToString("x2"));
+            }
+            Console.WriteLine();
+        }
+
     }
 }

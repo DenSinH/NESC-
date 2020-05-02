@@ -41,17 +41,25 @@ namespace NesEmulator
             {
                 BGShifterPatternLow <<= 1;
                 BGShifterPatternHigh <<= 1;
+
                 BGShifterAttributeLow <<= 1;
                 BGShifterAttributeHigh <<= 1;
             }
         }
 
-        private void SetPixel(int x, int y, int PaletteStart, int PaletteInternal)
+        private void SetPixel(int x, int y, int BGSpriteSelect, int PaletteStart, int PaletteInternal)
         {
+            /*
+             x: x position on screen
+             y: y position on screen
+             BGSpriteSelect: BG or Sprite selected
+             PaletteStart: Highest 3 bits of chosen palette in palette ram 
+             PaletteInternal: Lowest 2 bits of chosen palette in palette ram
+             */
             if ((x >= 0) && (x < 0x100) && (y >= 0) && (y < 0xf0))
             { 
                 this.display[0x100 * y + x] = this.palette[
-                            this[0x3f00 + (PaletteStart << 2) + PaletteInternal] & 0x3f
+                            this[0x3f00 + (BGSpriteSelect << 5) + (PaletteStart << 2) + PaletteInternal] & 0x3f
                     ];
             }
             
@@ -69,10 +77,13 @@ namespace NesEmulator
                 }
                 else if ((280 <= cycle) && (cycle <= 304))
                 {
-                    // vert(v) = vert(t) each tick
-                    FineY = TFineY;
-                    CourseY = TCourseY;
-                    NTY = TNTY;
+                    if (BGEnable == 1 || SpriteEnable == 1)
+                    {
+                        // vert(v) = vert(t) each tick
+                        FineY = TFineY;
+                        CourseY = TCourseY;
+                        NTY = TNTY;
+                    }
                 }
             }
 
@@ -82,13 +93,13 @@ namespace NesEmulator
                 if (this.cycle == 0)
                 {
                     // Idle cycle
-                    if ((this.scanline == 0) && this.OddFrame)
-                    {
-                        // Odd frame skip
-                        this.cycle = 1;
-                    }
+                    //if ((this.scanline == 0) && this.OddFrame)
+                    //{
+                    //    // Odd frame skip
+                    //    this.cycle = 1;
+                    //}
                 }
-                else if ((this.cycle <= 256) || (this.cycle >= 321 && this.cycle <= 336))
+                else if ((this.cycle <= 256) || (this.cycle >= 321 && this.cycle <= 337))
                 {
                     ShiftBGShifters();
 
@@ -100,7 +111,7 @@ namespace NesEmulator
                             LoadBGShifterNext();
 
                             // get the next tile id from the nametable
-                            BGNextTileID = this[0x2000 | (V & 0xfff)];  // 12 bit adress within nametables
+                            BGNextTileID = this[0x2000 | (V & 0x0fff)];  // 12 bit adress within nametables
                             break;
 
                         case 3:
@@ -111,25 +122,25 @@ namespace NesEmulator
                             // this is because of the way the attribute tables are split: https://wiki.nesdev.com/w/index.php/PPU_attribute_tables
 
                             BGNextTileAttribute = this[
-                                0x23C + // the ones in the binary formula
+                                0x23C0 + // the ones in the binary formula
                                 (NTY << 11) +
                                 (NTX << 10) +
-                                ((CourseY >> 2) << 3) + 
+                                ((CourseY >> 2) << 3) +
                                 (CourseX >> 2)
                                 ];
 
                             // This must be split into the 4 quadrants of the 32x32 pixel attribute "region"
                             // Attribute bit is BR BL TR TL (bottom/top right/left)
-                            // left if CourseX % 4 == 0, 1
-                            // top if CourseY % 4 == 0, 1
-                            
+                            // left if CourseX % 2 == 0
+                            // top if CourseY % 2 == 0
+
                             // if bottom: ignore first 4 bits, so shift right
-                            if (CourseY % 4 >= 2)
+                            if (CourseY % 2 == 1)
                             {
                                 BGNextTileAttribute >>= 4;
                             }
                             // if right: ignore first 2 bits, so shift right
-                            if (CourseX % 4 > 2)
+                            if (CourseX % 2 == 1)
                             {
                                 BGNextTileAttribute >>= 2;
                             }
@@ -208,16 +219,16 @@ namespace NesEmulator
                     CourseX = TCourseX;
                     LoadBGShifterNext();
                 }
-                else if ((cycle == 328) || (cycle == 336) || ((cycle < 256) && ((cycle % 8) == 0)))
+                else if ((cycle == 328) || (cycle == 336) || ((cycle < 256) && (cycle > 0) && ((cycle % 8) == 0)))
                 {
                     // Inc hori(v)
                     IncrementCourseX();
                 }
             }
 
-            byte BGPixel;    // value of the pixel to be rendered, calculated from the patterns (values 00, 01, 10, 11)
+            byte BGPattern;  // value of the pixel to be rendered, calculated from the patterns (values 00, 01, 10, 11)
                              // determines the color within the palette
-            byte BGPalette;  // index within the palette used, calculated from the attribute shifter
+            byte BGPalette;  // index of the palette used, calculated from the attribute shifter
 
             // Actually display pixel on screen
             if (BGEnable == 1)
@@ -225,18 +236,17 @@ namespace NesEmulator
                 // relevant bit to get from the shifters by fine x scrolling
                 UInt16 BitMask = (UInt16)(0x8000 >> FineX);
 
-                byte BGPixelLow = (byte)(((BGShifterPatternLow & BitMask) > 0) ? 1 : 0);
-                byte BGPixelHigh = (byte)(((BGShifterPatternHigh & BitMask) > 0) ? 1 : 0);
+                byte BGPatternLow = (byte)(((BGShifterPatternLow & BitMask) > 0) ? 1 : 0);
+                byte BGPatternHigh = (byte)(((BGShifterPatternHigh & BitMask) > 0) ? 1 : 0);
 
-                BGPixel = (byte)((BGPixelHigh << 1) | BGPixelLow);
+                BGPattern = (byte)((BGPatternHigh << 1) | BGPatternLow);
 
                 byte BGPaletteLow = (byte)(((BGShifterAttributeLow & BitMask) > 0) ? 1 : 0);
                 byte BGPaletteHigh = (byte)(((BGShifterAttributeHigh & BitMask) > 0) ? 1 : 0);
 
                 BGPalette = (byte)((BGPaletteHigh << 1) | BGPaletteLow);
 
-                // todo: paletteram is messed up
-                this.SetPixel(this.cycle - 1, this.scanline, BGPalette, BGPixel);
+                this.SetPixel(this.cycle - 1, this.scanline, 0, BGPalette, BGPattern);
             }
 
 
@@ -253,7 +263,7 @@ namespace NesEmulator
         }
 
         // for testing purposes
-        // draws spritetable 0 and palette on screen
+        // draws spritetable 'left' and palette on screen
         public void drawSpriteTable(byte left, byte PaletteNumber)
         {
             byte lower, upper;
@@ -269,7 +279,8 @@ namespace NesEmulator
 
                         for (byte bit = 0; bit < 8; bit++)
                         {
-                            this.SetPixel(8 * SpriteTableTileX + (7 - bit), (8 * SpriteTableTileY + row), PaletteNumber, (upper & 0x01) + (lower & 0x01));
+                            this.SetPixel(8 * SpriteTableTileX + (7 - bit), (8 * SpriteTableTileY + row),
+                                PaletteNumber / 4, PaletteNumber % 4, (upper & 0x01) + (lower & 0x01));
 
                             upper >>= 1;
                             lower >>= 1;
@@ -283,10 +294,10 @@ namespace NesEmulator
             {
                 for (int y = 0; y < 8; y++)
                 {
-                    this.SetPixel(16 * 8 + 4 * i, y, i >> 2, i % 4);
-                    this.SetPixel(16 * 8 + 4 * i + 1, y, i >> 2, i % 4);
-                    this.SetPixel(16 * 8 + 4 * i + 2, y, i >> 2, i % 4);
-                    this.SetPixel(16 * 8 + 4 * i + 3, y, i >> 2, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i, y, i >> 4, (i >> 2) & 0x03, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 1, y, i >> 4, (i >> 2) & 0x03, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 2, y, i >> 4, (i >> 2) & 0x03, i % 4);
+                    this.SetPixel(16 * 8 + 4 * i + 3, y, i >> 4, (i >> 2) & 0x03, i % 4);
                 }
              }
         }
