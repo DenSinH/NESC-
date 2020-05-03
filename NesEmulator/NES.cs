@@ -8,7 +8,7 @@ namespace NesEmulator
     public class NES
     {
         /* Debugging */
-        private const byte makeLog = 1;  // 0: no log | 1: Console | 2: File + Console
+        private byte makeLog = 1;  // 0: no log | 1: Console | 2: File + Console
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         /* Components */
@@ -26,6 +26,7 @@ namespace NesEmulator
         private const int height = 240;
 
         public int[] display;
+        public bool ShutDown = false;
 
         public NES(int[] display)
         {
@@ -62,7 +63,7 @@ namespace NesEmulator
             
             int dcycles;
             int GlobalCycles = 0;
-            while (true)
+            while (!this.ShutDown)
             {
                 if (!this.DMAActive)
                 {
@@ -93,7 +94,7 @@ namespace NesEmulator
                     }
                     else
                     {
-                        if ((GlobalCycles % 2) == 1)
+                        if ((GlobalCycles % 2) == 0)
                         {
                             DMAData = this.cpu[(DMAPage << 8) | DMAAddr];
                         }

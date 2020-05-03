@@ -20,23 +20,22 @@ namespace NesEmulator
         private byte[] SpriteShiftersPatternHigh = new byte[8]; // sprite low tile data
         private byte[] SpriteLatches = new byte[8];             // sprite attribute bytes
         private byte[] SpriteCounters = new byte[8];            // sprite X position counters
-        private bool[] SpriteActive = new bool[8];              // indicates wether Shifter i is active
 
-        private void DecSpriteCounters()
-        {
-            for (int i = 0; i < 8; i++)
-            {
-                SpriteCounters[i]--;
-                if (SpriteCounters[i] == 0)
-                {
-                    SpriteActive[i] = true;
-                }
-                else if (SpriteCounters[i] == 0xf8)
-                {
-                    SpriteActive[i] = false;
-                }
-            }
-        }
+        //private void DecSpriteCounters()
+        //{
+        //    for (int i = 0; i < 8; i++)
+        //    {
+        //        SpriteCounters[i]--;
+        //        if (SpriteCounters[i] == 0)
+        //        {
+        //            SpriteActive[i] = true;
+        //        }
+        //        else if (SpriteCounters[i] == 0xf8)
+        //        {
+        //            SpriteActive[i] = false;
+        //        }
+        //    }
+        //}
 
 
         private byte BGNextTileID;
@@ -82,12 +81,10 @@ namespace NesEmulator
              */
             if ((x >= 0) && (x < 0x100) && (y >= 0) && (y < 0xf0))
             { 
-                lock (this.nes.display)
-                {
-                    this.nes.display[0x100 * y + x] = this.palette[
-                            this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal] & 0x3f
-                    ];
-                }
+                // lock?
+                this.nes.display[0x100 * y + x] = this.palette[
+                        this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal] & 0x3f
+                ];
             }
             
         }
@@ -284,7 +281,6 @@ namespace NesEmulator
                         {
                             this.SecondaryOAM[i, att] = 0xff;
                         }
-                        SpriteActive[i] = false;
                     }
                 }
                 else if (this.cycle <= 64)
@@ -300,7 +296,7 @@ namespace NesEmulator
                         if (!FinishedEvaluation)
                         {
                             // odd cycles: I do everything in odd cycles, because it does not make much sense to copy data twice, this just makes it slower
-                            SecondaryOAM[SpritesFound, 0] = this.oam[4 * n];
+                            SecondaryOAM[SpritesFound, 0] = (byte)(this.oam[4 * n] + 0);
                             // todo: +16 for 8x16 mode
                             if ((SecondaryOAM[SpritesFound, 0] + 8 > this.scanline) && (SecondaryOAM[SpritesFound, 0] <= this.scanline))
                             {
@@ -351,7 +347,6 @@ namespace NesEmulator
                                 break;
                             case 4:
                                 // Fetch Low Sprite Tile Byte
-                                // todo: horizontal mirroring
                                 SpriteShiftersPatternLow[n] = this.PatternTable[
                                     (SpriteTableSelect << 12) | // todo: ignored in 8x16 mode
                                     (SecondaryOAM[n, 1] << 4) | // id stored in OAM
@@ -372,7 +367,6 @@ namespace NesEmulator
                                 break;
                             case 6:
                                 // Fetch Low Sprite Tile Byte
-                                // todo: horizontal mirroring
                                 SpriteShiftersPatternHigh[n] = this.PatternTable[
                                     (SpriteTableSelect << 12) | // todo: ignored in 8x16 mode
                                     (SecondaryOAM[n, 1] << 4) | // id stored in OAM
@@ -413,12 +407,11 @@ namespace NesEmulator
             {
                 if ((this.cycle >= 0) && (this.cycle < 256))
                 {
-                    DecSpriteCounters();
 
                     // traverse in reverse order to find last active sprite, shift all active registers
                     for (int i = 7; i >= 0; i--)
                     {
-                        if (SpriteActive[i])
+                        if ((SpriteCounters[i] < this.cycle) && (SpriteCounters[i] >= this.cycle - 8))
                         {
                             // Horizontal flipping is done when loading
                             byte SpritePixelLow = (byte)(((SpriteShiftersPatternLow[i] & 0x80) > 0) ? 1 : 0);

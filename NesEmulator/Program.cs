@@ -29,7 +29,7 @@ namespace NesEmulator
 
             // Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
             
-            Cartridge nestest = new Cartridge("../../roms/IceClimber.nes");
+            Cartridge nestest = new Cartridge("../../roms/DonkeyKong.nes");
             nestest.LoadTo(nes);
 
             nes.Run(false);

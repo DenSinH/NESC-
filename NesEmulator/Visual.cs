@@ -48,6 +48,12 @@ namespace NesEmulator
             this.KeyDown += new KeyEventHandler(Visual_KeyDown);
         }
 
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            this.nes.ShutDown = true;
+            base.OnFormClosing(e);
+        }
+
         void Visual_KeyDown(object sender, KeyEventArgs e)
         {
             // Debugging keys
