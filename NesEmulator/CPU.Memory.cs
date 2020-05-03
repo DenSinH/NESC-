@@ -23,23 +23,29 @@ namespace NesEmulator
                     switch (this.Map(index))
                     {
                         case 0x2000:
-                            throw new Exception("Cannot 'get' PPUCTRL");
+                            Console.Error.WriteLine("Cannot 'get' PPUCTRL");
+                            break;
                         case 0x2001:
-                            throw new Exception("Cannot 'get' PPUMASK");
+                            Console.Error.WriteLine("Cannot 'get' PPUMASK");
+                            break;
                         case 0x2002:
                             return this.nes.ppu.PPUSTATUS;
                         case 0x2003:
-                            throw new Exception("Cannot 'get' OAMADDR");
+                            Console.Error.WriteLine("Cannot 'get' OAMADDR");
+                            break;
                         case 0x2004:
                             return this.nes.ppu.OAMDATA;
                         case 0x2005:
-                            throw new Exception("Cannot 'get' PPUSCROLL");
+                            Console.Error.WriteLine("Cannot 'get' PPUSCROLL");
+                            break;
                         case 0x2006:
-                            throw new Exception("Cannot 'get' PPUADDR");
+                            Console.Error.WriteLine("Cannot 'get' PPUADDR");
+                            break;
                         case 0x2007:
                             return this.nes.ppu.PPUDATA;
                         case 0x4014:
-                            throw new Exception("Cannot 'get' OAMDMA");
+                            Console.Error.WriteLine("Cannot 'get' OAMDMA");
+                            break;
                         case 0x4016:
                             data = (byte)(((this.nes.ControllerState[0] & 0x80) > 0) ? 1 : 0);
                             this.nes.ControllerState[0] <<= 1;
@@ -69,7 +75,8 @@ namespace NesEmulator
                             this.nes.ppu.PPUMASK = value;
                             return;
                         case 0x2002:
-                            throw new Exception("Cannot 'set' PPUSTATUS");
+                            Console.Error.WriteLine("Cannot 'set' PPUSTATUS");
+                            break;
                         case 0x2003:
                             this.nes.ppu.OAMADDR = value;
                             return;

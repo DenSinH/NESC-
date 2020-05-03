@@ -117,12 +117,12 @@ namespace NesEmulator
                 if (debug && (this.cpu.cycle >= 1000000)) 
                 {
                     // Console.WriteLine(controller.PollKeysPressed());
-                    // this.ppu.DumpVRAM();
+                    // this.ppu.DumpOAM();
                     // this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
                     
                     // this.ppu.DrawNametable(0, 1);
                     // this.ppu.drawSpriteTable(1, 0);
-                    // Console.ReadKey();
+                    //Console.ReadKey();
                 }
 
             }

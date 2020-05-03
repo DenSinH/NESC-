@@ -8,7 +8,7 @@ namespace NesEmulator
         // Register info from https://wiki.nesdev.com/w/index.php/PPU_registers
         // ! LOCK ALL THESE WHEN USING !
 
-        private byte NMIEnable, MasterSlave, SpriteHeight, BGTileSelect, SpriteTileSelect, IncrementMode;
+        private byte NMIEnable, MasterSlave, SpriteHeight, BGTableSelect, SpriteTableSelect, IncrementMode;
 
         /*  $2000  */
         public byte PPUCTRL     // VPHB SINN : NMI enable (V), PPU master/slave (P), sprite height (H), background tile select (B),
@@ -19,8 +19,8 @@ namespace NesEmulator
                 NMIEnable = (byte)(value >> 7);
                 MasterSlave = (byte)((value >> 6) & 0x01);
                 SpriteHeight = (byte)((value >> 5) & 0x01);
-                BGTileSelect = (byte)((value >> 4) & 0x01);
-                SpriteTileSelect = (byte)((value >> 3) & 0x01);
+                BGTableSelect = (byte)((value >> 4) & 0x01);
+                SpriteTableSelect = (byte)((value >> 3) & 0x01);
                 IncrementMode = (byte)((value >> 2) & 0x01);
                 TNTY = (byte)((value >> 1) & 0x01);
                 TNTX = (byte)(value & 0x01);
@@ -83,6 +83,14 @@ namespace NesEmulator
             // Read/Write
             get
             {
+                if ((this.scanline >= 0) && (this.scanline < 240))
+                {
+                    if ((this.cycle >= 0) && (this.cycle <= 64))
+                    {
+                        // Secondary OAM clear, see https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+                        return 0xff;
+                    }
+                }
                 return oam[OAMAddr];
             }
             set

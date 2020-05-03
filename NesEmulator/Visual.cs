@@ -50,10 +50,19 @@ namespace NesEmulator
 
         void Visual_KeyDown(object sender, KeyEventArgs e)
         {
-            //if (e.KeyCode == Keys.Add)
-            //{
-                
-            //}
+            // Debugging keys
+            if (e.KeyCode == Keys.O)
+            {
+                this.nes.ppu.DumpOAM();
+            }
+            else if (e.KeyCode == Keys.V)
+            {
+                this.nes.ppu.DumpVRAM();
+            }
+            else if (e.KeyCode == Keys.P)
+            {
+                this.nes.ppu.DumpPAL();
+            }
         }
 
         void Visual_Paint(object sender, PaintEventArgs e)

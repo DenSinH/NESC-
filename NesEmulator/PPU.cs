@@ -33,6 +33,10 @@ namespace NesEmulator
             return this.scanline + ", " + this.cycle + ", V:  " + this.V.ToString("x4");
         }
 
+        /*
+         Debugging  stuff:
+             */
+
         public void DumpPAL()
         {
             for (int i = 0x3f00; i < 0x3f20; i++)
@@ -59,6 +63,18 @@ namespace NesEmulator
                 Console.Write(" " + this[i].ToString("x2"));
             }
             Console.WriteLine();
+        }
+
+        public void DumpOAM()
+        {
+            for (int n = 0; n < 64; n++)
+            {
+                for (int m = 0; m < 4; m++)
+                {
+                    Console.Write(this.oam[4 * n + m].ToString("x2") + " : ");
+                }
+                Console.WriteLine();
+            }
         }
 
         public void DrawNametable(int NT, int PT)
@@ -91,7 +107,6 @@ namespace NesEmulator
             }
         }
 
-        // for testing purposes
         // draws spritetable 'left' and palette on screen
         public void drawSpriteTable(byte left, byte PaletteNumber)
         {
