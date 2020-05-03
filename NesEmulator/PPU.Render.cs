@@ -357,6 +357,18 @@ namespace NesEmulator
                                     (SecondaryOAM[n, 1] << 4) | // id stored in OAM
                                     (this.scanline - SecondaryOAM[n, 0]) // todo: vertical mirroring; scanline is always >= Object y
                                     ];
+
+                                // Mirror the loaded sprite horizontally if necessary
+                                if ((SecondaryOAM[n, 2] & 0b0100_0000) > 0)
+                                {
+                                    byte Mirrored = 0;
+                                    for (int i = 0; i < 8; i++)
+                                    {
+                                        Mirrored |= (byte)((((SpriteShiftersPatternLow[n] >> i) & 0x01) > 0 ? 1 : 0) << (7 - i));
+                                    }
+                                    SpriteShiftersPatternLow[n] = Mirrored;
+                                }
+
                                 break;
                             case 6:
                                 // Fetch Low Sprite Tile Byte
@@ -366,6 +378,17 @@ namespace NesEmulator
                                     (SecondaryOAM[n, 1] << 4) | // id stored in OAM
                                     (this.scanline - SecondaryOAM[n, 0] + 8) // todo: vertical mirroring; scanline is always >= Object y
                                     ];
+
+                                // Mirror the loaded sprite horizontally if necessary
+                                if ((SecondaryOAM[n, 2] & 0b0100_0000) > 0)
+                                {
+                                    byte Mirrored = 0;
+                                    for (int i = 0; i < 8; i++)
+                                    {
+                                        Mirrored |= (byte)((((SpriteShiftersPatternHigh[n] >> i) & 0x01) > 0 ? 1 : 0) << (7 - i));
+                                    }
+                                    SpriteShiftersPatternHigh[n] = Mirrored;
+                                }
                                 break;
                             case 0:
                                 n++;
@@ -403,11 +426,15 @@ namespace NesEmulator
                             byte SpritePixelHigh = (byte)(((SpriteShiftersPatternHigh[i] & 0x80) > 0) ? 1 : 0);
                             SpriteShiftersPatternHigh[i] <<= 1;
 
-                            SpritePixel = (byte)((SpritePixelHigh << 1) | SpritePixelLow);
+                            // Sprite overlapping
+                            if ((SpritePixelHigh | SpritePixelLow) > 0)
+                            {
+                                SpritePixel = (byte)((SpritePixelHigh << 1) | SpritePixelLow);
 
-                            SpritePalette = (byte)(SpriteLatches[i] & 0x3);
+                                SpritePalette = (byte)(SpriteLatches[i] & 0x3);
 
-                            SpritePriority = (SpriteLatches[i] & 0x20) > 0;
+                                SpritePriority = (SpriteLatches[i] & 0x20) > 0;
+                            }
                         }
                     }
                 }
