@@ -4,8 +4,7 @@ namespace NesEmulator
 {
     public partial class PPU
     {
-        CPU cpu;
-        private int[] display;
+        NES nes;
 
         private MirrorType Mirror;
 
@@ -19,14 +18,9 @@ namespace NesEmulator
             0x00FCFC, 0xF8D8F8, 0x000000, 0x000000
         };
 
-        public PPU(int[] display)
+        public PPU(NES nes)
         {
-            this.display = display;
-        }
-
-        public void SetCPU(CPU cpu)
-        {
-            this.cpu = cpu;
+            this.nes = nes;
         }
 
         public void SetMirrorType(MirrorType m)

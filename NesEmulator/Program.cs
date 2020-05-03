@@ -29,7 +29,7 @@ namespace NesEmulator
 
             // Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
             
-            Cartridge nestest = new Cartridge("../../roms/DonkeyKong.nes");
+            Cartridge nestest = new Cartridge("../../roms/Diagnostic/nestest.nes");
             nestest.LoadTo(nes);
 
             nes.Run(false);
@@ -43,11 +43,14 @@ namespace NesEmulator
             NES nes = new NES(rawBitmap);
 
             Thread t = new Thread(() => Run(nes));
-            t.Start();
+            t.SetApartmentState(ApartmentState.STA);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Visual(nes));
+            Visual vis = new Visual(nes);
+
+            t.Start();
+            Application.Run(vis);
         }
     }
 }

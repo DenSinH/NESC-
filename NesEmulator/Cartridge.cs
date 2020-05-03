@@ -67,10 +67,10 @@ namespace NesEmulator
 
             for (int i = 0; i < 0x4000; i++)
             {
-                cpu.mem[0x8000 + i] = (byte)this.fs.ReadByte();
+                cpu[0x8000 + i] = (byte)this.fs.ReadByte();
                 if (this.PRGsize == 1)
                 {
-                    cpu.mem[0xc000 + i] = cpu.mem[0x8000 + i];
+                    cpu[0xc000 + i] = cpu[0x8000 + i];
                 }
             }
 
@@ -78,7 +78,7 @@ namespace NesEmulator
             {
                 for (int i = 0; i < 0x4000; i++)
                 {
-                    cpu.mem[0xc000 + i] = (byte)this.fs.ReadByte();
+                    cpu[0xc000 + i] = (byte)this.fs.ReadByte();
                 }
             }
 

@@ -50,21 +50,10 @@ namespace NesEmulator
 
         void Visual_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Add)
-            {
-                lock (this.nes)
-                {
-                    this.nes.NextPalette();
-                }
-            }
-            else if (e.KeyCode == Keys.Left)
-                Console.WriteLine("Key pressed");
-            else if (e.KeyCode == Keys.Right)
-                Console.WriteLine("Key pressed");
-            else if (e.KeyCode == Keys.Up)
-                Console.WriteLine("Key pressed");
-            else if (e.KeyCode == Keys.Down)
-                Console.WriteLine("Key pressed");
+            //if (e.KeyCode == Keys.Add)
+            //{
+                
+            //}
         }
 
         void Visual_Paint(object sender, PaintEventArgs e)

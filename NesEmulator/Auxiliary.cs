@@ -8,13 +8,30 @@ namespace NesEmulator
         Vertical
     }
 
+    public enum InstructionMode
+    {
+        A,
+        abs,
+        absX,
+        absY,
+        imm,
+        impl,
+        ind,
+        Xind,
+        indY,
+        rel,
+        zpg,
+        zpgX,
+        zpgY,
+        intern
+    }
 
     public class InstructionCaller
     {
         // wrapper for an instruction with mode
 
-        private Func<byte, int> method;
-        public byte mode;
+        private Func<InstructionMode, int> method;
+        public InstructionMode mode;
         /*
         Modes:
         0: A        ....	Accumulator	 	        OPC A	 	    operand is AC (implied single byte instruction)
@@ -34,7 +51,7 @@ namespace NesEmulator
         13: internal
         */
 
-        public InstructionCaller(Func<byte, int> method, byte mode)
+        public InstructionCaller(Func<InstructionMode, int> method, InstructionMode mode)
         {
             this.method = method;
             this.mode = mode;

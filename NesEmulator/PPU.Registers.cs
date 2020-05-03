@@ -66,14 +66,14 @@ namespace NesEmulator
             }
         }
 
-        private byte _oamaddr = 0;
+        private byte OAMAddr = 0;
         /*  $2003   */
         public byte OAMADDR    // aaaa aaaa: OAM read/write address
         {
             // Write Only
             set
             {
-                _oamaddr = value;
+                OAMAddr = value;
             }
         }
         
@@ -83,12 +83,12 @@ namespace NesEmulator
             // Read/Write
             get
             {
-                return oam[_oamaddr];
+                return oam[OAMAddr];
             }
             set
             {
-                oam[_oamaddr] = value;
-                _oamaddr++;
+                oam[OAMAddr] = value;
+                OAMAddr++;
             }
         }
 
@@ -157,7 +157,7 @@ namespace NesEmulator
             }
         }
 
-        private void IncrementCourseY()
+        private void IncrementY()
         /* From https://wiki.nesdev.com/w/index.php/PPU_scrolling#Wrapping_around*/
         {
             if (FineY != 7)                                 // if fine Y < 7 
@@ -233,7 +233,6 @@ namespace NesEmulator
         private byte DataBuffer;
         public byte PPUDATA    // dddd dddd: PPU data read/write
         {
-            // todo: outside of rendering strange behavior
             get
             {
                 byte data = DataBuffer;
@@ -248,7 +247,7 @@ namespace NesEmulator
                 if (((BGEnable == 1) || (SpriteEnable == 1)) && ((this.scanline >= 0) && (this.scanline < 240) && (this.cycle < 256)))
                 {
                     IncrementCourseX();
-                    IncrementCourseY();
+                    IncrementY();
                 }
                 else
                 {
@@ -264,7 +263,7 @@ namespace NesEmulator
                 if (((BGEnable == 1) || (SpriteEnable == 1)) && ((this.scanline >= 0) && (this.scanline < 240) && (this.cycle < 256)))
                 {
                     IncrementCourseX();
-                    IncrementCourseY();
+                    IncrementY();
                 }
                 else
                 {
@@ -273,6 +272,6 @@ namespace NesEmulator
             }
         }
         
-        public byte OAMDMA;     // aaaa aaaa: OAM DMA high address
+        /* OAMDMA is not implemented like the other registers. */
     }
 }

@@ -11,19 +11,39 @@ namespace NesEmulator
 
     public partial class CPU
     {
-        public CPUMEM mem;
         public int cycle;
         private bool kil = false;
+
+        public NES nes;
 
         private int oper;
         private byte pageChange;
 
         private InstructionCaller[] instructions;
 
-        public CPU()
+        public CPU(NES nes)
         {
             // initialize memory
-            this.mem = new CPUMEM();
+            this.nes = nes;
+
+            this.storage = new byte[0x10000];
+            // memory map from https://wiki.nesdev.com/w/index.php/CPU_memory_map
+            for (int i = 0; i < 0x10000; i++)
+            {
+                this.storage[i] = 0;
+            }
+
+            this.pc = new byte[2];
+            this.pc[0] = new byte();
+            this.pc[1] = new byte();
+
+            this.ac = 0;
+            this.x = 0;
+            this.y = 0;
+            this.sr = 0x24;
+            this.sp = 0x00;
+
+
             this.cycle = 0;
 
             // load opcodes
@@ -35,7 +55,7 @@ namespace NesEmulator
             foreach (KeyValuePair<string, string> entry in opcodes)
             {
                 string[] instructionString = entry.Value.Split(' ');
-                Func<byte, int> instruction;
+                Func<InstructionMode, int> instruction;
 
                 switch (instructionString[0])
                 {
@@ -109,22 +129,22 @@ namespace NesEmulator
                     default: throw new Exception("Unknown instruction: " + instructionString[0]);
                 }
 
-                byte mode;
+                InstructionMode mode;
                 switch (instructionString[1])
                 {
-                    case "A": mode = 0; break;
-                    case "abs": mode = 1; break;
-                    case "abs,X": mode = 2; break;
-                    case "abs,Y": mode = 3; break;
-                    case "#": mode = 4; break;
-                    case "impl": mode = 5; break;
-                    case "ind": mode = 6; break;
-                    case "X,ind": mode = 7; break;
-                    case "ind,Y": mode = 8; break;
-                    case "rel": mode = 9; break;
-                    case "zpg": mode = 10; break;
-                    case "zpg,X": mode = 11; break;
-                    case "zpg,Y": mode = 12; break;
+                    case "A": mode = InstructionMode.A; break;
+                    case "abs": mode = InstructionMode.abs; break;
+                    case "abs,X": mode = InstructionMode.absX; break;
+                    case "abs,Y": mode = InstructionMode.absY; break;
+                    case "#": mode = InstructionMode.imm; break;
+                    case "impl": mode = InstructionMode.impl; break;
+                    case "ind": mode = InstructionMode.ind; break;
+                    case "X,ind": mode = InstructionMode.Xind; break;
+                    case "ind,Y": mode = InstructionMode.indY; break;
+                    case "rel": mode = InstructionMode.rel; break;
+                    case "zpg": mode = InstructionMode.zpg; break;
+                    case "zpg,X": mode = InstructionMode.zpgX; break;
+                    case "zpg,Y": mode = InstructionMode.zpgY; break;
                     default: throw new Exception("Unknown mode: " + instructionString[1]);
                 }
 
@@ -135,29 +155,24 @@ namespace NesEmulator
             }
         }
 
-        public void SetPPU(PPU ppu)
-        {
-            this.mem.ppu = ppu;
-        }
-
         public string GenLog()
         {
-            int opcode = this.mem.getCurrent();
+            int opcode = this.getCurrent();
             InstructionCaller ic = this.instructions[opcode];
 
             return string.Format(
                         "    {0}  {1:x2} {2}: {3,5}\t\t{4:x2} {5:x2}     A:{6:x2} X:{7:x2} Y:{8:x2} P:{9:x2} SP:{10:x2}        CYC:{11}",
-                        this.mem.getPc().ToString("x2"),
+                        this.getPc().ToString("x2"),
                         opcode,
                         ic.getName(), // instruction,
                         ic.mode, // mode,
-                        this.mem[this.mem.getPc() + 1].ToString("x2"),
-                        this.mem[this.mem.getPc() + 2].ToString("x2"),
-                        this.mem.ac,
-                        this.mem.x,
-                        this.mem.y,
-                        this.mem.sr,
-                        this.mem.sp,
+                        this[this.getPc() + 1].ToString("x2"),
+                        this[this.getPc() + 2].ToString("x2"),
+                        this.ac,
+                        this.x,
+                        this.y,
+                        this.sr,
+                        this.sp,
                         this.cycle
                     );
         }
@@ -165,12 +180,12 @@ namespace NesEmulator
         public void RESET()
         {
             // Interrupt information from https://www.pagetable.com/?p=410
-            this.mem.push(this.mem[0x100]);
-            this.mem.push(this.mem[0x1ff]);
-            this.mem.push(this.mem[0x1fe]);
-            this.mem.setPc(
-                this.mem[this.mem.resetVector[0]],
-                this.mem[this.mem.resetVector[1]]
+            this.push(this[0x100]);
+            this.push(this[0x1ff]);
+            this.push(this[0x1fe]);
+            this.setPc(
+                this[this.resetVector[0]],
+                this[this.resetVector[1]]
                 );
             this.cycle = 7;
         }
@@ -178,10 +193,10 @@ namespace NesEmulator
         public int IRQ()
         {
             // Interrupt information from https://www.pagetable.com/?p=410
-            this.mem.push(this.mem.pc[0]);
-            this.mem.push(this.mem.pc[1]);
-            this.mem.push((byte)((this.mem.sr & 0b1110_1111) | 0b0010_0100));
-            this.mem.setPc(this.mem[this.mem.irqVector[0]], this.mem[this.mem.irqVector[1]]);
+            this.push(this.pc[0]);
+            this.push(this.pc[1]);
+            this.push((byte)((this.sr & 0b1110_1111) | 0b0010_0100));
+            this.setPc(this[this.irqVector[0]], this[this.irqVector[1]]);
 
             return 8;
         }
@@ -189,18 +204,18 @@ namespace NesEmulator
         public int NMI()
         {
             // Interrupt information from https://www.pagetable.com/?p=410
-            this.mem.push(this.mem.pc[0]);
-            this.mem.push(this.mem.pc[1]);
-            this.mem.push((byte)((this.mem.sr & 0b1110_1111) | 0b0010_0100));
-            this.mem.setPc(this.mem[this.mem.nmiVector[0]], this.mem[this.mem.nmiVector[1]]);
+            this.push(this.pc[0]);
+            this.push(this.pc[1]);
+            this.push((byte)((this.sr & 0b1110_1111) | 0b0010_0100));
+            this.setPc(this[this.nmiVector[0]], this[this.nmiVector[1]]);
 
             return 7;
         }
 
         public void SetPc(int val)
         {
-            this.mem.pc[0] = (byte)(val / 0x100);
-            this.mem.pc[1] = (byte)(val % 0x100);
+            this.pc[0] = (byte)(val / 0x100);
+            this.pc[1] = (byte)(val % 0x100);
         }
 
         public void Run()
@@ -213,8 +228,8 @@ namespace NesEmulator
 
         public int Step()
         {
-            int opcode = this.mem.getCurrent();
-            this.mem.incrPc();
+            int opcode = this.getCurrent();
+            this.incrPc();
 
             InstructionCaller ic = this.instructions[opcode];
 
@@ -230,116 +245,116 @@ namespace NesEmulator
             return ic.call();
         }
 
-        private void getOper(int mode)
+        private void getOper(InstructionMode mode)
         {
             byte ll;
             byte hh;
 
             switch (mode)
             {
-                case 0:  // A
+                case InstructionMode.A:
                     this.oper = -0x100;
                     this.pageChange = (byte)0;
                     return;
-                case 1:  // abs
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
-                    hh = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.abs:
+                    ll = this.getCurrent();
+                    this.incrPc();
+                    hh = this.getCurrent();
+                    this.incrPc();
 
                     this.oper = 0x100 * hh + ll;
                     this.pageChange = (byte)0;
                     return;
 
-                case 2:  // abs,X
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
-                    hh = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.absX:
+                    ll = this.getCurrent();
+                    this.incrPc();
+                    hh = this.getCurrent();
+                    this.incrPc();
 
-                    this.oper = (hh * 0x100 + ll + this.mem.x) % 0x10000;
-                    this.pageChange = (byte)(ll + this.mem.x > 0xff ? 1 : 0);
+                    this.oper = (hh * 0x100 + ll + this.x) % 0x10000;
+                    this.pageChange = (byte)(ll + this.x > 0xff ? 1 : 0);
                     return;
 
-                case 3:  // abs,Y
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
-                    hh = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.absY:
+                    ll = this.getCurrent();
+                    this.incrPc();
+                    hh = this.getCurrent();
+                    this.incrPc();
 
-                    this.oper = (hh * 0x100 + ll + this.mem.y) % 0x10000;
-                    this.pageChange = (byte)(ll + this.mem.y > 0xff ? 1 : 0);
+                    this.oper = (hh * 0x100 + ll + this.y) % 0x10000;
+                    this.pageChange = (byte)(ll + this.y > 0xff ? 1 : 0);
                     return;
 
-                case 4:  // #
-                    this.oper = -0x200 - this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.imm:
+                    this.oper = -0x200 - this.getCurrent();
+                    this.incrPc();
 
                     this.pageChange = (byte)0;
                     return;
 
-                case 5:  // impl
+                case InstructionMode.impl:
                     this.oper = -1;
                     this.pageChange = (byte)0;
                     return;
 
-                case 6:  // ind, only used by JMP
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
-                    hh = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.ind:  // only used by JMP
+                    ll = this.getCurrent();
+                    this.incrPc();
+                    hh = this.getCurrent();
+                    this.incrPc();
 
                     this.oper = 0x100 * hh + ll;
                     this.pageChange = (byte)0;
                     return;
 
-                case 7:  // X,ind
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.Xind:  // X,ind
+                    ll = this.getCurrent();
+                    this.incrPc();
 
-                    this.oper = this.mem[(ll + this.mem.x) % 0x100] + 0x100 * this.mem[(ll + this.mem.x + 1) % 0x100];
+                    this.oper = this[(ll + this.x) % 0x100] + 0x100 * this[(ll + this.x + 1) % 0x100];
                     this.pageChange = (byte)0;
                     return;
 
-                case 8:  // ind,Y
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.indY:  // ind,Y
+                    ll = this.getCurrent();
+                    this.incrPc();
 
-                    int effective_low = this.mem[ll];
-                    int effective_high = this.mem[(ll + 1) % 0x100] * 0x100;
-                    this.oper = (effective_high + effective_low + this.mem.y) % 0x10000;
+                    int effective_low = this[ll];
+                    int effective_high = this[(ll + 1) % 0x100] * 0x100;
+                    this.oper = (effective_high + effective_low + this.y) % 0x10000;
                     
-                    this.pageChange = (byte)(effective_low + this.mem.y > 0xff ? 1 : 0);
+                    this.pageChange = (byte)(effective_low + this.y > 0xff ? 1 : 0);
                     return;
 
-                case 9:  // rel
-                    this.oper = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.rel:  // rel
+                    this.oper = this.getCurrent();
+                    this.incrPc();
 
                     this.pageChange = (byte)0;
                     return;
 
-                case 10:  // zpg
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.zpg:  // zpg
+                    ll = this.getCurrent();
+                    this.incrPc();
 
                     this.oper = ll;
                     this.pageChange = (byte)0;
                     return;
 
-                case 11:  // zpg,X
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.zpgX:  // zpg,X
+                    ll = this.getCurrent();
+                    this.incrPc();
 
-                    this.oper = (ll + this.mem.x) % 0x100;
+                    this.oper = (ll + this.x) % 0x100;
                     this.pageChange = (byte)0;
                     return;
 
-                case 12:  // zpg,Y
-                    ll = this.mem.getCurrent();
-                    this.mem.incrPc();
+                case InstructionMode.zpgY:  // zpg,Y
+                    ll = this.getCurrent();
+                    this.incrPc();
 
-                    this.oper = (ll + this.mem.y) % 0x100;
+                    this.oper = (ll + this.y) % 0x100;
                     this.pageChange = (byte)0;
                     return;
 
@@ -350,7 +365,7 @@ namespace NesEmulator
 
         private int branch()
         {
-            int target = this.mem.pc[1] + unchecked((sbyte)this.oper);
+            int target = this.pc[1] + unchecked((sbyte)this.oper);
             int c = 0;
             if (target > 0xff)
             {
@@ -361,13 +376,13 @@ namespace NesEmulator
                 c = -1;
             }
 
-            this.mem.pc[1] = (byte)target;
+            this.pc[1] = (byte)target;
             if (c == 1)
             {
-                this.mem.pc[0]++;
+                this.pc[0]++;
             } else if (c == -1)
             {
-                this.mem.pc[0]--;
+                this.pc[0]--;
             }
 
             return c;

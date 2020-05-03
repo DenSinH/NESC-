@@ -6,7 +6,7 @@ namespace NesEmulator
 {
     partial class PPU
     {
-        private byte[] oam = new byte[0x100];           // object attribute memory
+        public byte[] oam = new byte[0x100];           // object attribute memory
 
         public byte[] PatternTable = new byte[0x2000];  // pattern tables
         public byte[] VRAM = new byte[0x1000];         // nametables + attribute tables

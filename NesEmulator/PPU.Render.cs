@@ -15,6 +15,9 @@ namespace NesEmulator
         private int scanline = 0;
         private int cycle = 0;
 
+        private byte[,] Sprites = new byte[8, 4];  // sprites on next scanline
+        private byte SpriteCount;                  // number of sprites in next scanline
+
         byte BGNextTileID;
         byte BGNextTileAttribute;
 
@@ -58,9 +61,12 @@ namespace NesEmulator
              */
             if ((x >= 0) && (x < 0x100) && (y >= 0) && (y < 0xf0))
             { 
-                this.display[0x100 * y + x] = this.palette[
+                lock (this.nes.display)
+                {
+                    this.nes.display[0x100 * y + x] = this.palette[
                             this[0x3f00 + (BGSpriteSelect << 5) + (PaletteStart << 2) + PaletteInternal] & 0x3f
                     ];
+                }
             }
             
         }
@@ -134,16 +140,16 @@ namespace NesEmulator
 
                             // This must be split into the 4 quadrants of the 32x32 pixel attribute "region"
                             // Attribute bit is BR BL TR TL (bottom/top right/left)
-                            // left if CourseX % 2 == 0
-                            // top if CourseY % 2 == 0
+                            // left if CourseX % 4 == 0, 1
+                            // top if CourseY % 4 == 0, 1
 
                             // if bottom: ignore first 4 bits, so shift right
-                            if (CourseY % 2 == 1)
+                            if (CourseY % 4 > 1)
                             {
                                 BGNextTileAttribute >>= 4;
                             }
                             // if right: ignore first 2 bits, so shift right
-                            if (CourseX % 2 == 1)
+                            if (CourseX % 4 > 1)
                             {
                                 BGNextTileAttribute >>= 2;
                             }
@@ -189,7 +195,7 @@ namespace NesEmulator
                     if (cycle == 256)
                     {
                         // inc vert(v)
-                        IncrementCourseY();
+                        IncrementY();
                     }
                     else if (cycle == 257)
                     {
@@ -250,7 +256,7 @@ namespace NesEmulator
 
                 BGPalette = (byte)((BGPaletteHigh << 1) | BGPaletteLow);
 
-                this.SetPixel(this.cycle - 1, this.scanline, 0, BGPalette, BGPattern);
+                this.SetPixel(this.cycle - 8, this.scanline - 8, 0, BGPalette, BGPattern);  // todo: why offset?
             }
 
 
