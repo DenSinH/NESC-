@@ -166,7 +166,7 @@ namespace NesEmulator
             }
             else
             {
-                throw new Exception("Unknown special index code for CPU memory: " + index);
+                throw new Exception("Unknown special index code for CPU memory: " + index.ToString("x2"));
             }
         }
 

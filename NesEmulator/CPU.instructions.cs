@@ -314,10 +314,12 @@ namespace NesEmulator
                     implied       BRK           00    1     7;
             */
 
-            this.setFlag('I', (byte)1);
+            this.incrPc(); this.incrPc();
             this.push(this.pc[0]);
             this.push(this.pc[1]);
             this.push((byte)(this.sr | 0b0011_0000));
+
+            this.setFlag('I', 1);
             this.setPc(this[this.irqVector[0]], this[this.irqVector[1]]);
 
             if (mode == InstructionMode.impl)
@@ -994,7 +996,7 @@ namespace NesEmulator
                     implied       PHP           08    1     3;
             */
 
-            this.push((byte)(this.sr | 0b00110000));
+            this.push((byte)(this.sr | 0b0011_0000));
 
             if (mode == InstructionMode.impl)
             {
@@ -1173,7 +1175,7 @@ namespace NesEmulator
                     (indirect,X)  SBC (oper,X)  E1    2     6;
                     (indirect),Y  SBC (oper),Y  F1    2     5*
             */
-            this.oper =  - (this[this.oper] ^ 0xff);
+            this.oper =  -0x200 - (this[this.oper] ^ 0xff);
             this.ADC(mode);
 
             switch (mode)
@@ -1722,6 +1724,7 @@ namespace NesEmulator
                 case InstructionMode.absY: return 4 + pageChange;
                 case InstructionMode.Xind: return 6;
                 case InstructionMode.indY: return 5 + pageChange;
+                case InstructionMode.imm: return 2;
                 default: throw new Exception("mode '" + mode + "' invalid for instruction");
             };
         }
