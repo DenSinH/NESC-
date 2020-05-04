@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 
@@ -75,6 +76,8 @@ namespace NesEmulator
         {
             if (Backbuffer != null)
             {
+                // no image scaling for crisp pixels!
+                e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
                 e.Graphics.DrawImage(this.Backbuffer, 0, 0, this.Size.Width, this.Size.Height);
             }
         }

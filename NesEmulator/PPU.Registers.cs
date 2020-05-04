@@ -66,7 +66,7 @@ namespace NesEmulator
             }
         }
 
-        private byte OAMAddr = 0;
+        public byte OAMAddr = 0;
         /*  $2003   */
         public byte OAMADDR    // aaaa aaaa: OAM read/write address
         {
@@ -250,6 +250,8 @@ namespace NesEmulator
                 {
                     // Pallete RAM can be accessed directly
                     data = DataBuffer;
+                    // Databuffer is what is "underneath" palette ram
+                    DataBuffer = this[0x2000 | (V & 0xfff)];
                 }
 
                 if (((BGEnable == 1) || (SpriteEnable == 1)) && ((this.scanline >= 0) && (this.scanline < 240) && (this.cycle < 256)))

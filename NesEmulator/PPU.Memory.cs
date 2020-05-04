@@ -48,7 +48,7 @@ namespace NesEmulator
                     if (index == 0x0010) index = 0x0000;
                     else if (index == 0x0014) index = 0x0004;
                     else if (index == 0x0018) index = 0x0008;
-                    else if (index == 0x0010) index = 0x000c;
+                    else if (index == 0x001c) index = 0x000c;
 
                     return this.PaletteRAM[index];
                 }
@@ -97,7 +97,7 @@ namespace NesEmulator
                     if (index == 0x0010) index = 0x0000;
                     else if (index == 0x0014) index = 0x0004;
                     else if (index == 0x0018) index = 0x0008;
-                    else if (index == 0x0010) index = 0x000c;
+                    else if (index == 0x001c) index = 0x000c;
 
                     this.PaletteRAM[index] = value;
                 }

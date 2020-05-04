@@ -35,6 +35,7 @@ namespace NesEmulator
             this.cpu = new CPU(this);
             this.ppu = new PPU(this);
 
+            // todo: no XInputController connected
             this.controllers[0] = new XInputController();
             this.controllers[1] = new KeyboardController();
         }
@@ -85,28 +86,31 @@ namespace NesEmulator
                 for (int i = 0; i < 3 * dcycles; i++)
                 {
                     // DMA transfer: 
-                    if (!DMAStart)
+                    if (DMAActive)
                     {
-                        if ((GlobalCycles % 2) == 1)
+                        if (!DMAStart)
                         {
-                            DMAStart = true;
-                        }
-                    }
-                    else
-                    {
-                        if ((GlobalCycles % 2) == 0)
-                        {
-                            DMAData = this.cpu[(DMAPage << 8) | DMAAddr];
+                            if ((GlobalCycles % 2) == 1)
+                            {
+                                DMAStart = true;
+                            }
                         }
                         else
                         {
-                            this.ppu.oam[DMAAddr] = DMAData;
-                            DMAAddr++;
-
-                            if (DMAAddr == 0)
+                            if ((GlobalCycles % 2) == 0)
                             {
-                                DMAStart = false;
-                                DMAActive = false;
+                                DMAData = this.cpu[(DMAPage << 8) | DMAAddr];
+                            }
+                            else
+                            {
+                                this.ppu.oam[(this.ppu.OAMAddr + DMAAddr) % 0x100] = DMAData;
+                                DMAAddr++;
+
+                                if (DMAAddr == 0)
+                                {
+                                    DMAStart = false;
+                                    DMAActive = false;
+                                }
                             }
                         }
                     }
@@ -115,15 +119,14 @@ namespace NesEmulator
                     GlobalCycles++;
                 }
 
-                if (debug && (this.cpu.cycle >= 1000000)) 
+                if (debug && (this.cpu.cycle >= 116758)) 
                 {
-                    // Console.WriteLine(controller.PollKeysPressed());
-                    // this.ppu.DumpOAM();
-                    // this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
-                    
+                    // this.ppu.DumpVRAM();
+                    this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
+
                     // this.ppu.DrawNametable(0, 1);
                     // this.ppu.drawSpriteTable(1, 0);
-                    //Console.ReadKey();
+                    Console.ReadKey();
                 }
 
             }

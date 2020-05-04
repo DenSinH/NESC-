@@ -96,6 +96,7 @@ namespace NesEmulator
                             this.nes.DMAActive = true;
                             this.nes.DMAAddr = 0;
                             this.nes.DMAPage = value;
+                            this.cycle += 513 + (this.cycle % 2);
                             return;
                         case 0x4016:
                             this.nes.ControllerState[0] = this.nes.controllers[0].PollKeysPressed();
