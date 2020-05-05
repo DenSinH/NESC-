@@ -30,7 +30,7 @@ namespace NesEmulator
             // Console.WriteLine(1000 * cpu.GetCycle() / (double)s.ElapsedMilliseconds);
             
             // fails brk: brk, 16-special
-            Cartridge nestest = new Cartridge("../../roms/DevilWorld.nes");
+            Cartridge nestest = new Cartridge("../../roms/smb.nes");
             nestest.LoadTo(nes);
 
             nes.Run(false);

@@ -65,7 +65,16 @@ namespace NesEmulator
              PaletteInternal: Lowest 2 bits of chosen palette in palette ram
              */
             if ((x >= 0) && (x < 0x100) && (y >= 0) && (y < 0xf0))
-            { 
+            {
+                //Console.WriteLine(string.Format(
+                //    "{0:x2}, {1:x2}    {2},{3},{4}  : {5}   Color: {6:x6}",
+                //    x, y, BGSpriteSelect, PaletteStart, PaletteInternal, 
+                //    this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal],
+                //    this.palette[
+                //        this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal] & 0x3f
+                //]
+                //    ));
+
                 lock (this.nes.display)
                 {
                     this.nes.display[0x100 * y + x] = this.palette[
@@ -629,11 +638,11 @@ namespace NesEmulator
                     {
                         if ((SpritePixel == 0) || (SpritePriority && (BGPixel != 0)))
                         {
-                            this.SetPixel(this.cycle - 8, this.scanline - 8, 0, BGPalette, BGPixel);  // todo: why offset?
+                            this.SetPixel(this.cycle - 8, this.scanline - 8, 0, BGPixel > 0 ? BGPalette : 0, BGPixel);  // todo: why offset?
                         }
                         else
                         {
-                            this.SetPixel(this.cycle - 8, this.scanline - 8, 1, SpritePalette, SpritePixel);  // todo: why offset?
+                            this.SetPixel(this.cycle - 8, this.scanline - 8, 1, SpritePixel > 0 ? SpritePalette : 0, SpritePixel);  // todo: why offset?
                         }
 
                         // Sprite0 hit detection

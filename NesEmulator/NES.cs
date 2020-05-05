@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading;
+using SharpDX;
 
 using NLog;
 
@@ -119,14 +119,14 @@ namespace NesEmulator
                     GlobalCycles++;
                 }
 
-                if (debug && (this.cpu.cycle >= 116758)) 
+                if (debug && (this.cpu.cycle >= 6167508)) 
                 {
                     // this.ppu.DumpVRAM();
                     this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
 
                     // this.ppu.DrawNametable(0, 1);
                     // this.ppu.drawSpriteTable(1, 0);
-                    Console.ReadKey();
+                    // Console.ReadKey();
                 }
 
             }
