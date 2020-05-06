@@ -55,6 +55,93 @@ namespace NesEmulator
             }
         }
 
+        private void LoadSpritePatternShifter(byte[] shifter, byte offset)
+        {
+            if (SpriteHeight == 0)
+            {
+                // 8x8 mode
+                if ((SecondaryOAM[n, 2] & 0x80) == 0)
+                {
+                    // No vertical mirroring
+                    shifter[n] = this.PatternTable[
+                        (SpriteTableSelect << 12) |
+                        (SecondaryOAM[n, 1] << 4) |
+                        (this.scanline - SecondaryOAM[n, 0] + offset)
+                        ];
+                }
+                else
+                {
+                    // Vertical mirroring
+                    shifter[n] = this.PatternTable[
+                        (SpriteTableSelect << 12) |
+                        (SecondaryOAM[n, 1] << 4) |
+                        (7 - (this.scanline - SecondaryOAM[n, 0]) + offset)
+                        ];
+                }
+
+            }
+            else
+            {
+                // 8x16 mode
+                if ((SecondaryOAM[n, 2] & 0x80) == 0)
+                {
+                    // No vertical mirroring
+                    if (this.scanline - SecondaryOAM[n, 0] < 8)
+                    {
+                        // Top tile
+                        shifter[n] = this.PatternTable[
+                        ((SecondaryOAM[n, 1] & 0x01) << 12) |
+                        ((SecondaryOAM[n, 1] & 0xfe) << 4) |
+                        (this.scanline - SecondaryOAM[n, 0] + offset)
+                        ];
+                    }
+                    else
+                    {
+                        // Bottom tile
+                        shifter[n] = this.PatternTable[
+                        ((SecondaryOAM[n, 1] & 0x01) << 12) |
+                        (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
+                        (this.scanline - SecondaryOAM[n, 0] - 8 + offset)
+                        ];
+                    }
+
+                }
+                else
+                {
+                    // Vertical mirroring
+                    if (this.scanline - SecondaryOAM[n, 0] < 8)
+                    {
+                        // Top tile, turns into bottom tile
+                        shifter[n] = this.PatternTable[
+                        ((SecondaryOAM[n, 1] & 0x01) << 12) |
+                        (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
+                        (7 - (this.scanline - SecondaryOAM[n, 0]) + offset)
+                        ];
+                    }
+                    else
+                    {
+                        // Bottom tile, turns into top tile
+                        shifter[n] = this.PatternTable[
+                        ((SecondaryOAM[n, 1] & 0x01) << 12) |
+                        ((SecondaryOAM[n, 1] & 0xfe) << 4) |
+                        (7 - (this.scanline - SecondaryOAM[n, 0] - 8) + offset)
+                        ];
+                    }
+                }
+            }
+
+            // Mirror the loaded sprite horizontally if necessary
+            if ((SecondaryOAM[n, 2] & 0b0100_0000) > 0)
+            {
+                byte Mirrored = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    Mirrored |= (byte)((((shifter[n] >> i) & 0x01) > 0 ? 1 : 0) << (7 - i));
+                }
+                shifter[n] = Mirrored;
+            }
+        }
+
         private void SetPixel(int x, int y, int BGSpriteSelect, int PaletteStart, int PaletteInternal)
         {
             /*
@@ -66,21 +153,10 @@ namespace NesEmulator
              */
             if ((x >= 0) && (x < 0x100) && (y >= 0) && (y < 0xf0))
             {
-                //Console.WriteLine(string.Format(
-                //    "{0:x2}, {1:x2}    {2},{3},{4}  : {5}   Color: {6:x6}",
-                //    x, y, BGSpriteSelect, PaletteStart, PaletteInternal, 
-                //    this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal],
-                //    this.palette[
-                //        this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal] & 0x3f
-                //]
-                //    ));
-
-                lock (this.nes.display)
-                {
-                    this.nes.display[0x100 * y + x] = this.palette[
-                        this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal] & 0x3f
+                // lock display?
+                this.nes.display[0x100 * y + x] = this.palette[
+                    this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal] & 0x3f
                 ];
-                }
             }
             
         }
@@ -101,6 +177,8 @@ namespace NesEmulator
                     this.VBlank = 0;
                     this.Sprite0Hit = 0;
                     this.SpriteOverflow = 0;
+                    Sprite0Rendered = false;
+
                 }
                 else if ((280 <= cycle) && (cycle <= 304))
                 {
@@ -180,7 +258,7 @@ namespace NesEmulator
                             break;
                         case 5:
                             // Fetch background pattern low byte
-                            BGNextPatternLow = this.PatternTable[
+                            BGNextPatternLow = this[
                                 (BGTableSelect << 12) |  // pattern table $0000 or $1000
                                 (BGNextTileID << 4) |
                                 (FineY)
@@ -189,7 +267,7 @@ namespace NesEmulator
 
                         case 7:
                             // Fetch background pattern high byte
-                            BGNextPatternHigh = this.PatternTable[
+                            BGNextPatternHigh = this[
                                 (BGTableSelect << 12) |  // pattern table $0000 or $1000
                                 (BGNextTileID << 4) |
                                 (FineY + 8)              // 8 below is high byte
@@ -285,7 +363,6 @@ namespace NesEmulator
                 {
                     // resetting secondary OAM
                     // for ease I just do this on cycle 0
-
                 }
                 else if (this.cycle <= 256)
                 {
@@ -293,8 +370,9 @@ namespace NesEmulator
                     {
                         if (!FinishedEvaluation)
                         {
-                            // odd cycles: I do everything in odd cycles, because it does not make much sense to copy data twice, this just makes it slower
-                            SecondaryOAM[SpritesFoundNext, 0] = (byte)(this.oam[4 * n] + 0);
+                            // odd cycles: I do everything in odd cycles, because it does not make much sense to copy data twice
+                            // that would just make it slower
+                            SecondaryOAM[SpritesFoundNext, 0] = this.oam[4 * n];
 
                             if ((SecondaryOAM[SpritesFoundNext, 0] + ((SpriteHeight == 1) ? 16 : 8) > this.scanline) &&
                                 (SecondaryOAM[SpritesFoundNext, 0] <= this.scanline))
@@ -376,175 +454,12 @@ namespace NesEmulator
                                 break;
                             case 4:
                                 // Fetch Low Sprite Tile Byte
-                                if (SpriteHeight == 0)
-                                {
-                                    // 8x8 mode
-                                    if ((SecondaryOAM[n, 2] & 0x80) == 0)
-                                    {
-                                        // No vertical mirroring
-                                        SpriteShiftersPatternLow[n] = this.PatternTable[
-                                            (SpriteTableSelect << 12) |
-                                            (SecondaryOAM[n, 1] << 4) |
-                                            (this.scanline - SecondaryOAM[n, 0])
-                                            ];
-                                    }
-                                    else
-                                    {
-                                        // Vertical mirroring
-                                        SpriteShiftersPatternLow[n] = this.PatternTable[
-                                            (SpriteTableSelect << 12) |
-                                            (SecondaryOAM[n, 1] << 4) |
-                                            (7 - (this.scanline - SecondaryOAM[n, 0]))
-                                            ];
-                                    }
-                                    
-                                } 
-                                else
-                                {
-                                    // 8x16 mode
-                                    if ((SecondaryOAM[n, 2] & 0x80) == 0)
-                                    {
-                                        // No vertical mirroring
-                                        if (this.scanline - SecondaryOAM[n, 0] < 8)
-                                        {
-                                            // Top tile
-                                            SpriteShiftersPatternLow[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            ((SecondaryOAM[n, 1] & 0xfe) << 4) |
-                                            (this.scanline - SecondaryOAM[n, 0])
-                                            ];
-                                        }
-                                        else
-                                        {
-                                            // Bottom tile
-                                            SpriteShiftersPatternLow[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
-                                            (this.scanline - SecondaryOAM[n, 0] - 8)
-                                            ];
-                                        }
-                                        
-                                    }
-                                    else
-                                    {
-                                        // Vertical mirroring
-                                        if (this.scanline - SecondaryOAM[n, 0] < 8)
-                                        {
-                                            // Top tile, turns into bottom tile
-                                            SpriteShiftersPatternLow[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
-                                            (7 - (this.scanline - SecondaryOAM[n, 0]))
-                                            ];
-                                        }
-                                        else
-                                        {
-                                            // Bottom tile, turns into top tile
-                                            SpriteShiftersPatternLow[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            ((SecondaryOAM[n, 1] & 0xfe) << 4) |
-                                            (7 - (this.scanline - SecondaryOAM[n, 0] - 8))
-                                            ];
-                                        }
-                                    }
-                                }
-
-                                // Mirror the loaded sprite horizontally if necessary
-                                if ((SecondaryOAM[n, 2] & 0b0100_0000) > 0)
-                                {
-                                    byte Mirrored = 0;
-                                    for (int i = 0; i < 8; i++)
-                                    {
-                                        Mirrored |= (byte)((((SpriteShiftersPatternLow[n] >> i) & 0x01) > 0 ? 1 : 0) << (7 - i));
-                                    }
-                                    SpriteShiftersPatternLow[n] = Mirrored;
-                                }
+                                LoadSpritePatternShifter(SpriteShiftersPatternLow, 0);
 
                                 break;
                             case 6:
                                 // Fetch Low Sprite Tile Byte
-                                if (SpriteHeight == 0)
-                                {
-                                    // 8x8 mode
-                                    if ((SecondaryOAM[n, 2] & 0x80) == 0)
-                                    {
-                                        // No vertical mirroring
-                                        SpriteShiftersPatternHigh[n] = this.PatternTable[
-                                            (SpriteTableSelect << 12) |
-                                            (SecondaryOAM[n, 1] << 4) |
-                                            (8 + (this.scanline - SecondaryOAM[n, 0]))
-                                            ];
-                                    }
-                                    else
-                                    {
-                                        // Vertical mirroring
-                                        SpriteShiftersPatternHigh[n] = this.PatternTable[
-                                            (SpriteTableSelect << 12) |
-                                            (SecondaryOAM[n, 1] << 4) |
-                                            (0xf - (this.scanline - SecondaryOAM[n, 0]))
-                                            ];
-                                    }
-                                }
-                                else
-                                {
-                                    // 8x16 mode
-                                    if ((SecondaryOAM[n, 2] & 0x80) == 0)
-                                    {
-                                        // No vertical mirroring
-                                        if (this.scanline - SecondaryOAM[n, 0] < 8)
-                                        {
-                                            // Top tile
-                                            SpriteShiftersPatternHigh[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            ((SecondaryOAM[n, 1] & 0xfe) << 4) |
-                                            (8 + (this.scanline - SecondaryOAM[n, 0]))
-                                            ];
-                                        }
-                                        else
-                                        {
-                                            // Bottom tile
-                                            SpriteShiftersPatternHigh[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
-                                            (8 + (this.scanline - SecondaryOAM[n, 0] - 8))
-                                            ];
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        // Vertical mirroring
-                                        if (this.scanline - SecondaryOAM[n, 0] < 8)
-                                        {
-                                            // Top tile, turns into bottom tile
-                                            SpriteShiftersPatternHigh[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
-                                            (0xf - (this.scanline - SecondaryOAM[n, 0]))
-                                            ];
-                                        }
-                                        else
-                                        {
-                                            // Bottom tile, turns into top tile
-                                            SpriteShiftersPatternHigh[n] = this.PatternTable[
-                                            ((SecondaryOAM[n, 1] & 0x01) << 12) |
-                                            ((SecondaryOAM[n, 1] & 0xfe) << 4) |
-                                            (0xf - (this.scanline - SecondaryOAM[n, 0] - 8))
-                                            ];
-                                        }
-                                    }
-                                }
-
-                                // Mirror the loaded sprite horizontally if necessary
-                                if ((SecondaryOAM[n, 2] & 0b0100_0000) > 0)
-                                {
-                                    byte Mirrored = 0;
-                                    for (int i = 0; i < 8; i++)
-                                    {
-                                        Mirrored |= (byte)((((SpriteShiftersPatternHigh[n] >> i) & 0x01) > 0 ? 1 : 0) << (7 - i));
-                                    }
-                                    SpriteShiftersPatternHigh[n] = Mirrored;
-                                }
+                                LoadSpritePatternShifter(SpriteShiftersPatternHigh, 8);
                                 break;
                             case 0:
                                 n++;
