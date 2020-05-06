@@ -38,6 +38,8 @@ namespace NesEmulator
                 ControlStyles.DoubleBuffer, true
             );
 
+            this.Text = "NES Emulator";
+
             Timer timer = new Timer();
             timer.Interval = 17;
             timer.Tick += new EventHandler(Tick);
@@ -102,7 +104,7 @@ namespace NesEmulator
                     this.Backbuffer = new Bitmap(width, height, width * 4,
                                 PixelFormat.Format32bppRgb, _rawBitmap.AddrOfPinnedObject());
                 //}
-
+                
                 _rawBitmap.Free();
                 Invalidate();  // set so that updated pixels are invalidated
             }

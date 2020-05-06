@@ -1,12 +1,13 @@
 ﻿using System;
+using NesEmulator.Mappers;
 
 namespace NesEmulator
 {
     public partial class PPU
     {
         NES nes;
-
-        private MirrorType Mirror;
+        
+        public Mapper Mapper;
 
         readonly int[] palette = {
             0x7C7C7C, 0x0000FC, 0x0000BC, 0x4428BC, 0x940084, 0xA80020, 0xA81000, 0x881400, 0x503000, 0x007800,
@@ -23,19 +24,21 @@ namespace NesEmulator
             this.nes = nes;
         }
 
-        public void SetMirrorType(MirrorType m)
+        public void SetMapper(Mapper m)
         {
-            this.Mirror = m;
+            this.Mapper = m;
         }
+        
+        /*
+        ====================
+          Debugging  stuff
+        ====================
+        */
 
         public string GenLog()
         {
             return this.scanline + ", " + this.cycle + ", V:  " + this.V.ToString("x4");
         }
-
-        /*
-         Debugging  stuff:
-             */
 
         public void DumpPAL()
         {
@@ -118,8 +121,8 @@ namespace NesEmulator
                 {
                     for (int row = 0; row < 8; row++)
                     {
-                        lower = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row];
-                        upper = this.PatternTable[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row + 8];
+                        lower = this[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row];
+                        upper = this[(left * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row + 8];
 
                         for (byte bit = 0; bit < 8; bit++)
                         {

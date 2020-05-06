@@ -119,14 +119,12 @@ namespace NesEmulator
                     GlobalCycles++;
                 }
 
-                if (debug && (this.cpu.cycle >= 6167508)) 
+                if (debug) 
                 {
-                    // this.ppu.DumpVRAM();
-                    this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
+                    // this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
 
                     // this.ppu.DrawNametable(0, 1);
                     // this.ppu.drawSpriteTable(1, 0);
-                    // Console.ReadKey();
                 }
 
             }

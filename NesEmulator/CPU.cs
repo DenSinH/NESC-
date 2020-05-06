@@ -5,6 +5,8 @@ using System.Globalization;
 
 using Newtonsoft.Json;
 
+using NesEmulator.Mappers;
+
 
 namespace NesEmulator
 {
@@ -16,6 +18,8 @@ namespace NesEmulator
 
         public NES nes;
 
+        public Mapper Mapper;
+
         private int oper;
         private byte pageChange;
 
@@ -26,12 +30,8 @@ namespace NesEmulator
             // initialize memory
             this.nes = nes;
 
-            this.storage = new byte[0x10000];
+            this.storage = new byte[0x4020];
             // memory map from https://wiki.nesdev.com/w/index.php/CPU_memory_map
-            for (int i = 0; i < 0x10000; i++)
-            {
-                this.storage[i] = 0;
-            }
 
             this.pc = new byte[2];
             this.pc[0] = new byte();
@@ -153,6 +153,11 @@ namespace NesEmulator
                     this.instructions[int.Parse(entry.Key, NumberStyles.HexNumber)] = new InstructionCaller(instruction, mode);
                 }
             }
+        }
+
+        public void SetMapper(Mapper m)
+        {
+            this.Mapper = m;
         }
 
         public string GenLog()

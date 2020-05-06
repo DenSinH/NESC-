@@ -19,8 +19,8 @@ namespace NesEmulator
             {
                 if (index >= 0)
                 {
-                    byte data;
-                    switch (this.Map(index))
+                    int i = this.Map(index);
+                    switch (i)
                     {
                         case 0x2000:
                             Console.Error.WriteLine("Cannot 'get' PPUCTRL");
@@ -47,7 +47,7 @@ namespace NesEmulator
                             Console.Error.WriteLine("Cannot 'get' OAMDMA");
                             break;
                         case 0x4016:
-                            data = (byte)(((this.nes.ControllerState[0] & 0x80) > 0) ? 1 : 0);
+                            byte data = (byte)(((this.nes.ControllerState[0] & 0x80) > 0) ? 1 : 0);
                             this.nes.ControllerState[0] <<= 1;
                             return data;
                         case 0x4017:
@@ -57,7 +57,13 @@ namespace NesEmulator
                         default:
                             break;
                     }
-                    return this.storage[this.Map(index)];
+
+                    if (i >= 0x4020)
+                    {
+                        return this.Mapper.cpuRead(i);
+                    }
+
+                    return this.storage[i];
                 }
                 return this.GetSpecial(index);
             }
@@ -65,8 +71,8 @@ namespace NesEmulator
             {
                 if (index >= 0)
                 {
-
-                    switch (this.Map(index))
+                    int i = this.Map(index);
+                    switch (i)
                     {
                         case 0x2000:
                             this.nes.ppu.PPUCTRL = value;
@@ -108,7 +114,14 @@ namespace NesEmulator
                             break;
                     }
 
-                    this.storage[this.Map(index)] = value;
+                    if (i >= 0x4020)
+                    {
+                        this.Mapper.cpuWrite(i, value);
+                    }
+                    else
+                    {
+                        this.storage[i] = value;
+                    }
                 }
                 else
                 {
@@ -172,7 +185,7 @@ namespace NesEmulator
 
         public byte getCurrent()
         {
-            return this.storage[this.getPc()];
+            return this[this.getPc()];
         }
 
         public int getPc()

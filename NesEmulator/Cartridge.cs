@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using NesEmulator.Mappers;
 
 namespace NesEmulator
 {
@@ -8,28 +9,43 @@ namespace NesEmulator
         private string filename;
         private FileStream fs;
 
-        private byte PRGsize, CHRSize;
-        private bool BatteryPackedPRGRam;
+        private byte PRGSize, CHRSize;
+
+        // Byte 6 data:
+        private bool BatteryPackedPRGRam, Trainer, IgnoreMirrorControl;
         private MirrorType Mirror;
-        private byte mapper;
+
+        // Byte 7 data:
+        private bool VSUnisystem, PlayChoice10, INES2;
+
+        // Byte 8 data:
+        private byte PRGRAMSize;
+
+        private Mapper Mapper;
 
         public Cartridge(string filename)
         {
             this.filename = filename;
             this.fs = File.OpenRead(filename);
+            byte MapperNumber;
 
+            // NES\n Header
             for (int i = 0; i < 4; i++)
             {
-                // NES\n Header
                 fs.ReadByte();
             }
 
-            this.PRGsize = (byte)this.fs.ReadByte();
+            // Bytes 4 and 5
+            this.PRGSize = (byte)this.fs.ReadByte();
             this.CHRSize = (byte)this.fs.ReadByte();
 
-            byte Flags6 = (byte)this.fs.ReadByte();
+            // Byte 6
+            byte Flags = (byte)this.fs.ReadByte();
 
-            if ((Flags6 & 0x01) == 0)
+            this.IgnoreMirrorControl = (Flags & 0x08) > 0;
+            // todo: ignore mirror control
+
+            if ((Flags & 0x01) == 0)
             {
                 this.Mirror = MirrorType.Horizontal;
             } else
@@ -37,11 +53,43 @@ namespace NesEmulator
                 this.Mirror = MirrorType.Vertical;
             }
 
-            // FLAGS, Not implemented
+            this.BatteryPackedPRGRam = (Flags & 0x02) > 0;
 
-            for (int i = 0; i < 9; i++)
+            // todo: deal with trainer
+            this.Trainer = (Flags & 0x04) > 0;
+            MapperNumber = (byte)((Flags & 0xf0) >> 4);
+
+            // Byte 7
+            Flags = (byte)this.fs.ReadByte();
+
+            this.VSUnisystem = (Flags & 0x01) > 0;
+            this.PlayChoice10 = (Flags & 0x02) > 0;
+            this.INES2 = (Flags & 0x0c) > 0;
+
+            MapperNumber = (byte)(MapperNumber | (Flags & 0xf0));
+
+            // Byte 8
+            this.PRGRAMSize = (byte)fs.ReadByte();
+
+            // Byte 8-15, Not implemented
+            for (int i = 0; i < 7; i++)
             {
                 fs.ReadByte();
+            }
+
+            switch (MapperNumber)
+            {
+                case 0:
+                    this.Mapper = new Mapper_000(fs, Mirror, PRGSize, CHRSize);
+                    break;
+                case 1:
+                    this.Mapper = new Mapper_001(fs, Mirror, PRGSize, CHRSize);
+                    break;
+                case 2:
+                    this.Mapper = new Mapper_002(fs, Mirror, PRGSize, CHRSize);
+                    break;
+                default:
+                    throw new Exception(string.Format("Mapper {0:3} not implemented yet", MapperNumber));
             }
         }
 
@@ -52,47 +100,10 @@ namespace NesEmulator
 
         public void LoadTo(CPU cpu, PPU ppu)
         {
-            ppu.SetMirrorType(this.Mirror);
-
-            // load rom into memory  
-
-            this.xNROM(cpu, ppu);
+            ppu.SetMapper(this.Mapper);
+            cpu.SetMapper(this.Mapper);
 
             this.fs.Close();
         }
-
-        private void xNROM(CPU cpu, PPU ppu)
-        {
-            // todo: PRG RAM
-
-            for (int i = 0; i < 0x4000; i++)
-            {
-                cpu[0x8000 + i] = (byte)this.fs.ReadByte();
-                if (this.PRGsize == 1)
-                {
-                    cpu[0xc000 + i] = cpu[0x8000 + i];
-                }
-            }
-
-            if (this.PRGsize == 2)
-            {
-                for (int i = 0; i < 0x4000; i++)
-                {
-                    cpu[0xc000 + i] = (byte)this.fs.ReadByte();
-                }
-            }
-
-            if (this.CHRSize == 1)
-            {
-                for (int i = 0; i < 0x2000; i++)
-                {
-                    ppu[i] = (byte)this.fs.ReadByte();
-                }
-            }
-
-            Console.WriteLine(this.filename + "Loaded");
-
-        }
-
     }
 }

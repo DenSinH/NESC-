@@ -5,7 +5,9 @@ namespace NesEmulator
     public enum MirrorType
     {
         Horizontal,
-        Vertical
+        Vertical,
+        SingleScreen,
+        FourScreen
     }
 
     public enum InstructionMode

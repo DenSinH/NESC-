@@ -8,7 +8,7 @@ namespace NesEmulator
     {
         public byte[] oam = new byte[0x100];           // object attribute memory
 
-        public byte[] PatternTable = new byte[0x2000];  // pattern tables
+        // pattern tables are in the mapper
         public byte[] VRAM = new byte[0x1000];         // nametables + attribute tables
         public byte[] PaletteRAM = new byte[0x20];      // palette ram indices
 
@@ -18,14 +18,14 @@ namespace NesEmulator
             {
                 if (index < 0x2000)
                 {
-                    return this.PatternTable[index];
+                    return this.Mapper.ppuRead(index);
                 }
                 else if (index < 0x3f00)
                 {
                     index %= 0x1000;
 
                     // todo: Mirroring, currently default Horizontal
-                    switch (this.Mirror)
+                    switch (this.Mapper.Mirror)
                     {
                         case MirrorType.Horizontal:
                             if (index < 0x800)
@@ -38,8 +38,10 @@ namespace NesEmulator
                             }
                         case MirrorType.Vertical:
                             return this.VRAM[index % 0x800];
+                        case MirrorType.SingleScreen:
+                            return this.VRAM[index % 0x400];
                         default:
-                            throw new Exception("Unknown mirroring type: " + this.Mirror);
+                            throw new Exception("Unknown mirroring type: " + this.Mapper.Mirror);
                     }
                 }
                 else if (index < 0x4000)
@@ -66,14 +68,14 @@ namespace NesEmulator
             {
                 if (index < 0x2000)
                 {
-                    this.PatternTable[index] = value;
+                    this.Mapper.ppuWrite(index, value);
                 }
                 else if (index < 0x3f00)
                 {
                     index %= 0x1000;
 
                     // todo: Mirroring, currently default Horizontal
-                    switch (this.Mirror)
+                    switch (this.Mapper.Mirror)
                     {
                         case MirrorType.Horizontal:
                             if (index < 0x800)
@@ -87,8 +89,11 @@ namespace NesEmulator
                         case MirrorType.Vertical:
                             this.VRAM[index % 0x800] = value;
                             break;
+                        case MirrorType.SingleScreen:
+                            this.VRAM[index % 0x400] = value;
+                            break;
                         default:
-                            throw new Exception("Unknown mirroring type: " + this.Mirror);
+                            throw new Exception("Unknown mirroring type: " + this.Mapper.Mirror);
                     }
                 }
                 else if (index < 0x4000)

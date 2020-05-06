@@ -63,7 +63,7 @@ namespace NesEmulator
                 if ((SecondaryOAM[n, 2] & 0x80) == 0)
                 {
                     // No vertical mirroring
-                    shifter[n] = this.PatternTable[
+                    shifter[n] = this[
                         (SpriteTableSelect << 12) |
                         (SecondaryOAM[n, 1] << 4) |
                         (this.scanline - SecondaryOAM[n, 0] + offset)
@@ -72,7 +72,7 @@ namespace NesEmulator
                 else
                 {
                     // Vertical mirroring
-                    shifter[n] = this.PatternTable[
+                    shifter[n] = this[
                         (SpriteTableSelect << 12) |
                         (SecondaryOAM[n, 1] << 4) |
                         (7 - (this.scanline - SecondaryOAM[n, 0]) + offset)
@@ -89,7 +89,7 @@ namespace NesEmulator
                     if (this.scanline - SecondaryOAM[n, 0] < 8)
                     {
                         // Top tile
-                        shifter[n] = this.PatternTable[
+                        shifter[n] = this[
                         ((SecondaryOAM[n, 1] & 0x01) << 12) |
                         ((SecondaryOAM[n, 1] & 0xfe) << 4) |
                         (this.scanline - SecondaryOAM[n, 0] + offset)
@@ -98,7 +98,7 @@ namespace NesEmulator
                     else
                     {
                         // Bottom tile
-                        shifter[n] = this.PatternTable[
+                        shifter[n] = this[
                         ((SecondaryOAM[n, 1] & 0x01) << 12) |
                         (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
                         (this.scanline - SecondaryOAM[n, 0] - 8 + offset)
@@ -112,7 +112,7 @@ namespace NesEmulator
                     if (this.scanline - SecondaryOAM[n, 0] < 8)
                     {
                         // Top tile, turns into bottom tile
-                        shifter[n] = this.PatternTable[
+                        shifter[n] = this[
                         ((SecondaryOAM[n, 1] & 0x01) << 12) |
                         (((SecondaryOAM[n, 1] & 0xfe) + 1) << 4) |
                         (7 - (this.scanline - SecondaryOAM[n, 0]) + offset)
@@ -121,7 +121,7 @@ namespace NesEmulator
                     else
                     {
                         // Bottom tile, turns into top tile
-                        shifter[n] = this.PatternTable[
+                        shifter[n] = this[
                         ((SecondaryOAM[n, 1] & 0x01) << 12) |
                         ((SecondaryOAM[n, 1] & 0xfe) << 4) |
                         (7 - (this.scanline - SecondaryOAM[n, 0] - 8) + offset)
