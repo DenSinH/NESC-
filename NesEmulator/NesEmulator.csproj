@@ -75,7 +75,6 @@
     <Compile Include="CPU.Instructions.cs" />
     <Compile Include="Mappers\Mapper.cs" />
     <Compile Include="Mappers\Mapper_000.cs" />
-    <Compile Include="Mappers\Mapper_001.cs" />
     <Compile Include="Mappers\Mapper_002.cs" />
     <Compile Include="Mappers\Mapper_003.cs" />
     <Compile Include="NES.cs" />

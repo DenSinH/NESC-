@@ -2,8 +2,6 @@
 using System.Threading;
 using System.Windows.Forms;
 
-using System.Diagnostics;
-
 namespace NesEmulator
 {
 
@@ -12,7 +10,7 @@ namespace NesEmulator
         public static void Run(NES nes)
         {      
             // fails brk: brk, 16-special
-            Cartridge cartridge = new Cartridge("../../roms/MegaMan.nes");
+            Cartridge cartridge = new Cartridge("../../roms/Cybernoid.nes");
             cartridge.LoadTo(nes);
 
             nes.Run(true);

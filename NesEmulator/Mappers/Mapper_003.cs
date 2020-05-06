@@ -3,26 +3,23 @@ using System.IO;
 
 namespace NesEmulator.Mappers
 {
-    class Mapper_000 : Mapper
+    class Mapper_003 : Mapper
     {
         /*
-        https://wiki.nesdev.com/w/index.php/NROM#Overview
-        PRG ROM size: 16 KiB for NROM-128, 32 KiB for NROM-256 (DIP-28 standard pinout)
-        PRG ROM bank size: Not bankswitched
-        PRG RAM: 2 or 4 KiB, not bankswitched, only in Family Basic (but most emulators provide 8)
-        CHR capacity: 8 KiB ROM (DIP-28 standard pinout) but most emulators support RAM
-        CHR bank size: Not bankswitched, see CNROM
-        Nametable mirroring: Solder pads select vertical or horizontal mirroring
-        Subject to bus conflicts: Yes, but irrelevant
+        https://wiki.nesdev.com/w/index.php/UxROM#Overview
+        CPU $8000-$BFFF: 16 KB switchable PRG ROM bank
+        CPU $C000-$FFFF: 16 KB PRG ROM bank, fixed to the last bank
         */
 
         private byte PRGSize, CHRSize;
         private byte[] PRGROM;
         private byte[] CHRROM;
+        private byte BankSelect;
+
         private byte[] ExpansionROM; // Adresses $4020 - $8000 (Expansion ROM/SRAM)
         private MirrorType _Mirror;
 
-        public Mapper_000(FileStream fs, MirrorType m, byte PRGSize, byte CHRSize) : base(fs, m)
+        public Mapper_003(FileStream fs, MirrorType m, byte PRGSize, byte CHRSize) : base(fs, m)
         {
             this._Mirror = m;
             this.PRGSize = PRGSize;
@@ -77,8 +74,7 @@ namespace NesEmulator.Mappers
             }
             else
             {
-                // Might go over 0x10000, we just mirror this down. This should not happen though
-                this.PRGROM[(index - 0x8000) % this.PRGROM.Length] = value;
+                this.BankSelect = (byte)(value & 0x03);
             }
         }
 
@@ -86,7 +82,7 @@ namespace NesEmulator.Mappers
         {
             if (index < 0x2000)
             {
-                return this.CHRROM[index];
+                return this.CHRROM[this.BankSelect * 0x2000 + index];
             }
             else
             {

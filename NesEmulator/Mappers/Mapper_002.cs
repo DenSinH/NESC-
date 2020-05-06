@@ -16,7 +16,7 @@ namespace NesEmulator.Mappers
         private byte BankSelect;
 
         private byte[] CHRROM;
-        private byte[] ExpansionRÖM; // Adresses $4020 - $8000 (Expansion ROM/SRAM)
+        private byte[] ExpansionROM; // Adresses $4020 - $8000 (Expansion ROM/SRAM)
         private MirrorType _Mirror;
 
         public Mapper_002(FileStream fs, MirrorType m, byte PRGSize, byte CHRSize) : base(fs, m)
@@ -28,7 +28,7 @@ namespace NesEmulator.Mappers
 
             this.PRGROM = new byte[this.PRGSize, 0x4000];
             this.CHRROM = new byte[0x2000];  // No window
-            this.ExpansionRÖM = new byte[0x8000 - 0x4020];
+            this.ExpansionROM = new byte[0x8000 - 0x4020];
 
             for (int i = 0; i < this.PRGSize; i++)
             {
@@ -61,7 +61,7 @@ namespace NesEmulator.Mappers
         {
             if (index < 0x8000)
             {
-                return this.ExpansionRÖM[index - 0x4020];
+                return this.ExpansionROM[index - 0x4020];
             }
             else if (index < 0xc000)
             {
@@ -78,7 +78,7 @@ namespace NesEmulator.Mappers
         {
             if (index < 0x8000)
             {
-                this.ExpansionRÖM[index - 0x4020] = value;
+                this.ExpansionROM[index - 0x4020] = value;
             }
             else
             {
