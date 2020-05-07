@@ -60,7 +60,7 @@ namespace NesEmulator
 
                     if (i >= 0x4020)
                     {
-                        return this.Mapper.cpuRead(i);
+                        return this.Mapper.CPURead(i);
                     }
 
                     return this.storage[i];
@@ -116,7 +116,7 @@ namespace NesEmulator
 
                     if (i >= 0x4020)
                     {
-                        this.Mapper.cpuWrite(i, value);
+                        this.Mapper.CPUWrite(i, value);
                     }
                     else
                     {

@@ -478,6 +478,11 @@ namespace NesEmulator
             */
             if ((BGEnable == 1) || (SpriteEnable == 1))
             {
+                if (this.cycle == 260)
+                {
+                    this.Mapper.At260OfVisibleScanline();
+                }
+
                 if (((this.cycle >= 9) && (this.cycle < 256)) || (SpriteLeftColumnEnable == 1) || (BGLeftColumnEnable == 1))
                 {
                     byte SpritePixel = 0;
@@ -499,17 +504,20 @@ namespace NesEmulator
                                     SpriteShiftersPatternHigh[i] <<= 1;
 
                                     // Sprite overlapping
-                                    if ((SpritePixelHigh | SpritePixelLow) > 0)
+                                    if (SpritePixel == 0)
                                     {
-                                        SpritePixel = (byte)((SpritePixelHigh << 1) | SpritePixelLow);
-
-                                        SpritePalette = (byte)(SpriteLatches[i] & 0x3);
-
-                                        SpritePriority = (SpriteLatches[i] & 0x20) > 0;
-                                        
-                                        if (Sprite0Active && (i == 0))
+                                        if ((SpritePixelHigh | SpritePixelLow) > 0)
                                         {
-                                            Sprite0Rendered = true;
+                                            SpritePixel = (byte)((SpritePixelHigh << 1) | SpritePixelLow);
+
+                                            SpritePalette = (byte)(SpriteLatches[i] & 0x3);
+
+                                            SpritePriority = (SpriteLatches[i] & 0x20) > 0;
+
+                                            if (Sprite0Active && (i == 0))
+                                            {
+                                                Sprite0Rendered = true;
+                                            }
                                         }
                                     }
                                 }

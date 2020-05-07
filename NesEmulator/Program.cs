@@ -10,7 +10,7 @@ namespace NesEmulator
         public static void Run(NES nes)
         {      
             // fails brk: brk, 16-special
-            Cartridge cartridge = new Cartridge("../../roms/Cybernoid.nes");
+            Cartridge cartridge = new Cartridge("../../roms/smb3.nes");
             cartridge.LoadTo(nes);
 
             nes.Run(true);

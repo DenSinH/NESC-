@@ -18,7 +18,7 @@ namespace NesEmulator
             {
                 if (index < 0x2000)
                 {
-                    return this.Mapper.ppuRead(index);
+                    return this.Mapper.PPURead(index);
                 }
                 else if (index < 0x3f00)
                 {
@@ -40,6 +40,8 @@ namespace NesEmulator
                             return this.VRAM[index % 0x800];
                         case MirrorType.SingleScreen:
                             return this.VRAM[index % 0x400];
+                        case MirrorType.FourScreen:
+                            return this.VRAM[index];
                         default:
                             throw new Exception("Unknown mirroring type: " + this.Mapper.Mirror);
                     }
@@ -68,7 +70,7 @@ namespace NesEmulator
             {
                 if (index < 0x2000)
                 {
-                    this.Mapper.ppuWrite(index, value);
+                    this.Mapper.PPUWrite(index, value);
                 }
                 else if (index < 0x3f00)
                 {
@@ -91,6 +93,9 @@ namespace NesEmulator
                             break;
                         case MirrorType.SingleScreen:
                             this.VRAM[index % 0x400] = value;
+                            break;
+                        case MirrorType.FourScreen:
+                            this.VRAM[index] = value;
                             break;
                         default:
                             throw new Exception("Unknown mirroring type: " + this.Mapper.Mirror);

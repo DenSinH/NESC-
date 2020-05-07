@@ -53,6 +53,11 @@ namespace NesEmulator
                 this.Mirror = MirrorType.Vertical;
             }
 
+            if (IgnoreMirrorControl)
+            {
+                this.Mirror = MirrorType.FourScreen;
+            }
+
             this.BatteryPackedPRGRam = (Flags & 0x02) > 0;
 
             // todo: deal with trainer
@@ -88,6 +93,9 @@ namespace NesEmulator
                 case 3:
                     this.Mapper = new Mapper_003(fs, Mirror, PRGSize, CHRSize);
                     break;
+                case 4:
+                    this.Mapper = new Mapper_004(fs, Mirror, PRGSize, CHRSize, IgnoreMirrorControl);
+                    break;
                 default:
                     throw new Exception(string.Format("Mapper {0:3} not implemented yet", MapperNumber));
             }
@@ -95,14 +103,9 @@ namespace NesEmulator
 
         public void LoadTo(NES nes)
         {
-            this.LoadTo(nes.cpu, nes.ppu);
-        }
-
-        public void LoadTo(CPU cpu, PPU ppu)
-        {
-            ppu.SetMapper(this.Mapper);
-            cpu.SetMapper(this.Mapper);
-
+            nes.SetMapper(this.Mapper);
+            nes.ppu.SetMapper(this.Mapper);
+            nes.cpu.SetMapper(this.Mapper);
             this.fs.Close();
         }
     }

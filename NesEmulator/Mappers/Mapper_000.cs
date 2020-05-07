@@ -56,7 +56,7 @@ namespace NesEmulator.Mappers
             }
         }
 
-        public override byte cpuRead(int index)
+        public override byte CPURead(int index)
         {
             if (index < 0x8000)
             {
@@ -69,7 +69,7 @@ namespace NesEmulator.Mappers
             }
         }
 
-        public override void cpuWrite(int index, byte value)
+        public override void CPUWrite(int index, byte value)
         {
             if (index < 0x8000)
             {
@@ -82,7 +82,7 @@ namespace NesEmulator.Mappers
             }
         }
 
-        public override byte ppuRead(int index)
+        public override byte PPURead(int index)
         {
             if (index < 0x2000)
             {
@@ -94,7 +94,7 @@ namespace NesEmulator.Mappers
             }
         }
 
-        public override void ppuWrite(int index, byte value)
+        public override void PPUWrite(int index, byte value)
         {
             if (index < 0x2000)
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using SharpDX;
 
+using NesEmulator.Mappers;
 using NLog;
 
 namespace NesEmulator
@@ -14,6 +15,7 @@ namespace NesEmulator
         /* Components */
         public CPU cpu;
         public PPU ppu;
+        public Mapper Mapper;
 
         public byte DMAPage, DMAAddr, DMAData;
         public bool DMAActive, DMAStart;
@@ -34,10 +36,23 @@ namespace NesEmulator
 
             this.cpu = new CPU(this);
             this.ppu = new PPU(this);
-
-            // todo: no XInputController connected
+            
             this.controllers[0] = new XInputController();
+            try
+            {
+                this.controllers[0].PollKeysPressed();
+            }
+            catch (SharpDX.SharpDXException)
+            {
+                this.controllers[0] = new KeyboardController();
+            }
+
             this.controllers[1] = new KeyboardController();
+        }
+
+        public void SetMapper(Mapper m)
+        {
+            this.Mapper = m;
         }
 
         private void Log(string message)
@@ -82,6 +97,10 @@ namespace NesEmulator
                     this.cpu.cycle += this.cpu.NMI();
                 }
                 
+                if (this.ppu.Mapper.DoIRQ())
+                {
+                    this.cpu.cycle += this.cpu.IRQ();
+                }
 
                 for (int i = 0; i < 3 * dcycles; i++)
                 {
@@ -119,11 +138,12 @@ namespace NesEmulator
                     GlobalCycles++;
                 }
 
-                if (debug) 
+                if (debug && (this.cpu.cycle > 0x400000)) 
                 {
                     // this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
 
-                    // this.ppu.DrawNametable(0, 1);
+                    // this.ppu.DrawNametable(0, 0);
+                    // Console.WriteLine("drawn nametable");
                     // this.ppu.drawSpriteTable(1, 0);
                 }
 

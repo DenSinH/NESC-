@@ -86,7 +86,7 @@ namespace NesEmulator
             {
                 for (int y = 0; y < 30; y++)
                 {
-                    int TilePatternID = this.VRAM[NT * 0x800 + 32 * y + x];
+                    int TilePatternID = this.VRAM[NT * 0x400 + 32 * y + x];
                     for (int finey = 0; finey < 8; finey++)
                     {
                         byte PatternLow = this[0x1000 * PT + (TilePatternID << 4) + finey];
@@ -127,7 +127,7 @@ namespace NesEmulator
                         for (byte bit = 0; bit < 8; bit++)
                         {
                             this.SetPixel(8 * SpriteTableTileX + (7 - bit), (8 * SpriteTableTileY + row),
-                                PaletteNumber / 4, PaletteNumber % 4, (upper & 0x01) + (lower & 0x01));
+                                PaletteNumber / 4, PaletteNumber % 4, 2 * (upper & 0x01) + (lower & 0x01));
 
                             upper >>= 1;
                             lower >>= 1;

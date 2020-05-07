@@ -77,6 +77,7 @@
     <Compile Include="Mappers\Mapper_000.cs" />
     <Compile Include="Mappers\Mapper_002.cs" />
     <Compile Include="Mappers\Mapper_003.cs" />
+    <Compile Include="Mappers\Mapper_004.cs" />
     <Compile Include="NES.cs" />
     <Compile Include="PPU.cs" />
     <Compile Include="PPU.Memory.cs" />
