@@ -87,6 +87,9 @@ namespace NesEmulator
                 case 0:
                     this.Mapper = new Mapper_000(fs, Mirror, PRGSize, CHRSize);
                     break;
+                case 1:
+                    this.Mapper = new Mapper_001(fs, Mirror, PRGSize, CHRSize);
+                    break;
                 case 2:
                     this.Mapper = new Mapper_002(fs, Mirror, PRGSize, CHRSize);
                     break;

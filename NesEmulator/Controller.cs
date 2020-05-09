@@ -9,6 +9,14 @@ namespace NesEmulator
         public abstract byte PollKeysPressed();
     }
 
+    public class NoController : Controller
+    {
+        public override byte PollKeysPressed()
+        {
+            return 0;
+        }
+    }
+
     public class XInputController : Controller
     {
         SharpDX.XInput.Controller controller;

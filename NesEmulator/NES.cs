@@ -15,6 +15,7 @@ namespace NesEmulator
         /* Components */
         public CPU cpu;
         public PPU ppu;
+        public APU apu;
         public Mapper Mapper;
 
         public byte DMAPage, DMAAddr, DMAData;
@@ -36,6 +37,7 @@ namespace NesEmulator
 
             this.cpu = new CPU(this);
             this.ppu = new PPU(this);
+            this.apu = new APU();
             
             this.controllers[0] = new XInputController();
             try
@@ -97,7 +99,7 @@ namespace NesEmulator
                     this.cpu.cycle += this.cpu.NMI();
                 }
                 
-                if (this.ppu.Mapper.DoIRQ())
+                if (this.Mapper.DoIRQ())
                 {
                     this.cpu.cycle += this.cpu.IRQ();
                 }
@@ -138,13 +140,13 @@ namespace NesEmulator
                     GlobalCycles++;
                 }
 
-                if (debug && (this.cpu.cycle > 0x400000)) 
+                if (debug && (this.cpu.cycle > 85798)) 
                 {
-                    // this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
+                    //this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
 
-                    // this.ppu.DrawNametable(0, 0);
-                    // Console.WriteLine("drawn nametable");
-                    // this.ppu.drawSpriteTable(1, 0);
+                    //this.ppu.DrawNametable(0, 0);
+                    //this.ppu.drawSpriteTable(1, 0);
+                    //Console.ReadKey();
                 }
 
             }
