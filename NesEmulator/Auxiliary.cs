@@ -68,6 +68,6 @@ namespace NesEmulator
         {
             return this.method.Method.Name;
         }
-
     }
+
 }

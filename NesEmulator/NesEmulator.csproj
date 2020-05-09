@@ -37,6 +37,9 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NAudio, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\NAudio.1.10.0\lib\net35\NAudio.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -70,9 +73,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="APU.cs" />
+    <Compile Include="Audio\Pulse.cs" />
     <Compile Include="Auxiliary.cs" />
     <Compile Include="Cartridge.cs" />
-    <Compile Include="Channel.cs" />
+    <Compile Include="Audio\Channel.cs" />
     <Compile Include="Controller.cs" />
     <Compile Include="CPU.Instructions.cs" />
     <Compile Include="Mappers\Mapper.cs" />
@@ -88,6 +92,7 @@
     <Compile Include="CPU.Memory.cs" />
     <Compile Include="PPU.Registers.cs" />
     <Compile Include="PPU.Render.cs" />
+    <Compile Include="Audio\Speaker.cs" />
     <Compile Include="Visual.cs">
       <SubType>Form</SubType>
     </Compile>

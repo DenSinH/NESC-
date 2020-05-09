@@ -2,6 +2,7 @@
 using SharpDX;
 
 using NesEmulator.Mappers;
+using NesEmulator.Audio;
 using NLog;
 
 namespace NesEmulator
@@ -31,13 +32,23 @@ namespace NesEmulator
         public int[] display;
         public bool ShutDown = false;
 
+        /* Audio */
+        public const int SampleRate = 44100;
+        public readonly Speaker speaker = new Speaker(new NAudio.Wave.WaveFormat(SampleRate, 16, 1));
+
+        /* Sync */
+        private const int PPUClockRate = 5369318;
+        private double t = 0;
+        private const double dtPPUCycle = 1.0 / PPUClockRate;
+        private const double dtAudioCycle = 1.0 / SampleRate;
+
         public NES(int[] display)
         {
             this.display = display;
 
             this.cpu = new CPU(this);
             this.ppu = new PPU(this);
-            this.apu = new APU();
+            this.apu = new APU(this);
             
             this.controllers[0] = new XInputController();
             try
@@ -74,81 +85,94 @@ namespace NesEmulator
         {
             // assume cartridge is loaded
             this.cpu.RESET();
-
-            // for only testing cpu on nestest.nes:
-            //this.cpu.SetPc(0xc000);
-            //this.cpu.Run();
             
             int dcycles;
             int GlobalCycles = 0;
             while (!this.ShutDown)
             {
-                if (!this.DMAActive)
+                if (this.speaker.NeedMoreSamples())
                 {
-                    dcycles = this.cpu.Step();
-                    this.cpu.cycle += dcycles;
-                }
-                else
-                {
-                    dcycles = 1;
-                }
-
-                if (this.ppu.ThrowNMI)
-                {
-                    this.ppu.ThrowNMI = false;
-                    this.cpu.cycle += this.cpu.NMI();
-                }
-                
-                if (this.Mapper.DoIRQ())
-                {
-                    this.cpu.cycle += this.cpu.IRQ();
-                }
-
-                for (int i = 0; i < 3 * dcycles; i++)
-                {
-                    // DMA transfer: 
-                    if (DMAActive)
+                    if (!this.DMAActive)
                     {
-                        if (!DMAStart)
+                        dcycles = this.cpu.Step();
+                        this.cpu.cycle += dcycles;
+                    }
+                    else
+                    {
+                        dcycles = 1;
+                    }
+
+                    if (this.ppu.ThrowNMI)
+                    {
+                        this.ppu.ThrowNMI = false;
+                        this.cpu.cycle += this.cpu.NMI();
+                    }
+
+                    if (this.Mapper.DoIRQ())
+                    {
+                        this.cpu.cycle += this.cpu.IRQ();
+                    }
+
+                    for (int i = 0; i < 3 * dcycles; i++)
+                    {
+                        // DMA transfer: 
+                        if (DMAActive)
                         {
-                            if ((GlobalCycles % 2) == 1)
+                            if (!DMAStart)
                             {
-                                DMAStart = true;
-                            }
-                        }
-                        else
-                        {
-                            if ((GlobalCycles % 2) == 0)
-                            {
-                                DMAData = this.cpu[(DMAPage << 8) | DMAAddr];
+                                if ((GlobalCycles % 2) == 1)
+                                {
+                                    DMAStart = true;
+                                }
                             }
                             else
                             {
-                                this.ppu.oam[(this.ppu.OAMAddr + DMAAddr) % 0x100] = DMAData;
-                                DMAAddr++;
-
-                                if (DMAAddr == 0)
+                                if ((GlobalCycles % 2) == 0)
                                 {
-                                    DMAStart = false;
-                                    DMAActive = false;
+                                    DMAData = this.cpu[(DMAPage << 8) | DMAAddr];
+                                }
+                                else
+                                {
+                                    this.ppu.oam[(this.ppu.OAMAddr + DMAAddr) % 0x100] = DMAData;
+                                    DMAAddr++;
+
+                                    if (DMAAddr == 0)
+                                    {
+                                        DMAStart = false;
+                                        DMAActive = false;
+                                    }
                                 }
                             }
                         }
+
+                        this.ppu.Step();
+
+                        if (GlobalCycles % 6 == 0)
+                        {
+                            // APU runs at half the speed of the CPU
+                            this.apu.Step();
+                        }
+
+                        t += dtPPUCycle;
+                        if (t > dtAudioCycle)
+                        {
+                            this.speaker.AddSample(this.apu.GetSample());
+                            t -= dtAudioCycle;
+                        }
+
+                        GlobalCycles++;
                     }
 
-                    this.ppu.Step();
-                    GlobalCycles++;
+                    if (debug && (this.cpu.cycle > 85798))
+                    {
+                        //this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
+
+                        //this.ppu.DrawNametable(0, 0);
+                        //this.ppu.drawSpriteTable(1, 0);
+                        //Console.ReadKey();
+                    }
+
                 }
-
-                if (debug && (this.cpu.cycle > 85798)) 
-                {
-                    //this.Log(this.cpu.GenLog() + " || PPU: " + this.ppu.GenLog());
-
-                    //this.ppu.DrawNametable(0, 0);
-                    //this.ppu.drawSpriteTable(1, 0);
-                    //Console.ReadKey();
-                }
-
             }
         }
 

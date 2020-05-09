@@ -46,6 +46,10 @@ namespace NesEmulator
                         case 0x4014:
                             Console.Error.WriteLine("Cannot 'get' OAMDMA");
                             break;
+
+                        case 0x4015:
+                            return this.nes.apu.APUSTATUS;
+
                         case 0x4016:
                             byte data = (byte)(((this.nes.ControllerState[0] & 0x80) > 0) ? 1 : 0);
                             this.nes.ControllerState[0] <<= 1;
@@ -98,17 +102,50 @@ namespace NesEmulator
                         case 0x2007:
                             this.nes.ppu.PPUDATA = value;
                             return;
+
+                        case 0x4000:
+                            this.nes.apu.pulse1.PULSE4000 = value;
+                            return;
+                        case 0x4001:
+                            this.nes.apu.pulse1.PULSESWEEP = value;
+                            return;
+                        case 0x4002:
+                            this.nes.apu.pulse1.Period = (ushort)((this.nes.apu.pulse1.Period & 0xff00) | value);
+                            return;
+                        case 0x4003:
+                            this.nes.apu.pulse1.PULSE4003 = value;
+                            return;
+
+                        case 0x4004:
+                            this.nes.apu.pulse2.PULSE4000 = value;
+                            return;
+                        case 0x4005:
+                            this.nes.apu.pulse2.PULSESWEEP = value;
+                            return;
+                        case 0x4006:
+                            this.nes.apu.pulse2.Period = (ushort)((this.nes.apu.pulse2.Period & 0xff00) | value);
+                            return;
+                        case 0x4007:
+                            this.nes.apu.pulse2.PULSE4003 = value;
+                            return;
+
                         case 0x4014:
                             this.nes.DMAActive = true;
                             this.nes.DMAAddr = 0;
                             this.nes.DMAPage = value;
                             this.cycle += 513 + (this.cycle % 2);
                             return;
+
+                        case 0x4015:
+                            this.nes.apu.APUSTATUS = value;
+                            return;
+
                         case 0x4016:
                             this.nes.ControllerState[0] = this.nes.controllers[0].PollKeysPressed();
                             return;
                         case 0x4017:
                             this.nes.ControllerState[1] = this.nes.controllers[1].PollKeysPressed();
+                            this.nes.apu.FrameCounter = value;
                             return;
                         default:
                             break;
