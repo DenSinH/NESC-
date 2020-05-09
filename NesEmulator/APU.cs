@@ -8,6 +8,8 @@ namespace NesEmulator
         const double amplitude = 0.05;
         public Pulse pulse1;
         public Pulse pulse2;
+        public Noise noise;
+        public Triangle triangle;
         private int cycle;
 
         private NES nes;
@@ -26,6 +28,8 @@ namespace NesEmulator
 
                 return (byte)(
                     (OldFrameInterrupt ? 0x40 : 0) |
+                    (this.noise.GetLengthCounter() ? 0x08 : 0) |
+                    (this.triangle.GetLengthCounter() ? 0x04 : 0) |
                     (this.pulse2.GetLengthCounter() ? 0x02 : 0) |
                     (this.pulse1.GetLengthCounter() ? 0x01 : 0)
                     );
@@ -46,6 +50,15 @@ namespace NesEmulator
                 {
                     this.pulse2.SetLengthCounter(-1);
                 }
+                if (!EnableNoise)
+                {
+                    this.noise.SetLengthCounter(-1);
+                }
+                if (!EnableTriangle)
+                {
+                    this.triangle.SetLengthCounter(-1);
+                }
+
             }
         }
 
@@ -76,6 +89,8 @@ namespace NesEmulator
         {
             this.pulse1 = new Pulse(amplitude);
             this.pulse2 = new Pulse(amplitude);
+            this.noise = new Noise(amplitude);
+            this.triangle = new Triangle(amplitude);
 
             this.nes = nes;
         }
@@ -84,23 +99,54 @@ namespace NesEmulator
         {
             this.pulse1.QuarterFrame();
             this.pulse2.QuarterFrame();
+            this.noise.QuarterFrame();
+            this.triangle.QuarterFrame();
         }
 
         private void HalfFrame()
         {
             this.pulse1.HalfFrame();
             this.pulse2.HalfFrame();
+            this.noise.HalfFrame();
+            this.triangle.HalfFrame();
         }
 
         public ushort GetSample()
         {
-            return (ushort)(this.pulse1.GetSample() + this.pulse2.GetSample());
+            // samples are mixed together
+            short Sample = 0;
+            if (this.EnablePulse1)
+            {
+                Sample += this.pulse1.GetSample();
+            }
+            if (this.EnablePulse2)
+            {
+                Sample += this.pulse2.GetSample();
+            }
+            if (this.EnableNoise)
+            {
+                // see https://wiki.nesdev.com/w/index.php/APU_Mixer#Linear_Approximation (about half of the others)
+                Sample += (short)(this.noise.GetSample() >> 1);
+            }
+            if (this.EnableTriangle)
+            {
+                Sample += this.triangle.GetSample();
+            }
+            return (ushort)(Sample);
         }
 
         public void Step()
         {
             this.pulse1.Step();
             this.pulse2.Step();
+            this.noise.Step();
+
+            /*
+             * From https://wiki.nesdev.com/w/index.php/APU_Triangle:
+             * Unlike the pulse channels, this timer ticks at the rate of the CPU clock rather than the APU (CPU/2) clock.
+             */
+            this.triangle.Step();
+            this.triangle.Step();
 
             if (Mode)
             {

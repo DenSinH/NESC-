@@ -13,12 +13,29 @@ namespace NesEmulator.Audio
         protected UInt16 t;
         public UInt16 Period;
         protected byte LengthCounter;
-        public bool LengthCounterHalt;
+        protected bool LengthCounterHalt;
 
-        public abstract void Step();
+        protected abstract void OnTimer0();
         public abstract short GetSample();
         public abstract void QuarterFrame();
         public abstract void HalfFrame();
+        
+        protected double amplitude;
+
+        public Channel(double amplitude)
+        {
+            this.amplitude = amplitude;
+        }
+
+        public void Step()
+        {
+            t--;
+            if (t == 0)
+            {
+                this.OnTimer0();
+                t = this.Period;
+            }
+        }
 
         public void SetLengthCounter(int value)
         {

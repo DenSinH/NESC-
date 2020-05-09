@@ -8,7 +8,9 @@ namespace NesEmulator.Audio
 {
     public class Pulse : Channel
     {
-        private double amplitude;
+        /*
+         https://wiki.nesdev.com/w/index.php/APU_Pulse
+        */
         
         private byte sequence;
         private byte index;
@@ -55,14 +57,12 @@ namespace NesEmulator.Audio
         private byte VolumeReset;
         private byte VolumeDivider, VolumeDecay;
 
-        public Pulse(double amplitude)
+        public Pulse(double amplitude) : base(amplitude)
         {
             this.t = 0;
             this.Period = 1;
             this.index = 0;
             this.sequence = 0b0100_0000;  // 12.5% duty cycle by default. This is just an arbitrary choice
-
-            this.amplitude = amplitude;
         }
 
         public void SetDutyCycle(byte value)
@@ -86,25 +86,21 @@ namespace NesEmulator.Audio
             }
         }
 
-        public override void Step()
+        protected override void OnTimer0()
         {
-            t--;
-            if (t == 0)
-            {
-                this.index++;
-                this.index &= 0x07;
-                t = this.TargetPeriod();
-            }
+            this.index++;
+            this.index &= 0x07;
         }
 
         public override short GetSample()
         {
             if (this.LengthCounter == 0)
             {
+                // Length counter mute
                 return 0;
             }
-            
-            if (this.TargetPeriod() > 0x7ff || this.Period < 8)
+
+            if (this.Period > 0x7ff || this.Period < 8)
             {
                 // Sweep unit mute
                 return 0;
@@ -120,7 +116,6 @@ namespace NesEmulator.Audio
             {
                 SampleValue *= VolumeDecay / 16.0;
             }
-
             return (short)(SampleValue * UInt16.MaxValue);
         }
 
@@ -140,6 +135,7 @@ namespace NesEmulator.Audio
         public override void QuarterFrame()
         {
             // volume envelope
+            /* https://wiki.nesdev.com/w/index.php/APU_Envelope */
             if (!VolumeStart)
             {
                 if (VolumeDivider == 0)
@@ -154,6 +150,10 @@ namespace NesEmulator.Audio
                         VolumeDecay--;
                     }
                 }
+                else
+                {
+                    VolumeDivider--;
+                }
             }
             else
             {
@@ -166,6 +166,10 @@ namespace NesEmulator.Audio
         public override void HalfFrame()
         {
             // clock Length counter
+            /*
+             * https://wiki.nesdev.com/w/index.php/APU_Frame_Counter
+             * https://wiki.nesdev.com/w/index.php/APU_Length_Counter
+             */
             if (!LengthCounterHalt)
             {
                 if (LengthCounter > 0)
@@ -173,8 +177,11 @@ namespace NesEmulator.Audio
                     this.LengthCounter--;
                 }
             }
-            
+
             // clock Sweep unit
+            /*
+             * https://wiki.nesdev.com/w/index.php/APU_Sweep
+             */
             if (SweepEnabled)
             {
                 if (SweepDividerCount == 0)

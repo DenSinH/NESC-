@@ -129,6 +129,32 @@ namespace NesEmulator
                             this.nes.apu.pulse2.PULSE4003 = value;
                             return;
 
+                        case 0x4008:
+                            this.nes.apu.triangle.TRIANGLE4008 = value;
+                            return;
+                        case 0x4009:
+                            // unused
+                            return;
+                        case 0x400a:
+                            this.nes.apu.triangle.Period = (ushort)((this.nes.apu.triangle.Period & 0xff00) | value);
+                            return;
+                        case 0x400b:
+                            this.nes.apu.triangle.TRIANGLE400B = value;
+                            return;
+
+                        case 0x400c:
+                            this.nes.apu.noise.NOISE400C = value;
+                            return;
+                        case 0x400d:
+                            // unused
+                            return;
+                        case 0x400e:
+                            this.nes.apu.noise.MODE_PERIOD = value;
+                            return;
+                        case 0x400f:
+                            this.nes.apu.noise.NOISE400F = value;
+                            return;
+
                         case 0x4014:
                             this.nes.DMAActive = true;
                             this.nes.DMAAddr = 0;

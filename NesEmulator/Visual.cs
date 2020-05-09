@@ -53,6 +53,7 @@ namespace NesEmulator
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            this.nes.speaker.ShutDown();
             this.nes.ShutDown = true;
             base.OnFormClosing(e);
         }

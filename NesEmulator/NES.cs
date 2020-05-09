@@ -85,6 +85,8 @@ namespace NesEmulator
         {
             // assume cartridge is loaded
             this.cpu.RESET();
+
+            this.speaker.ClearBuffer();
             
             int dcycles;
             int GlobalCycles = 0;
