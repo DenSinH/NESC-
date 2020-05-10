@@ -10,7 +10,7 @@ namespace NesEmulator
         public static void Run(NES nes)
         {      
             // fails brk: brk, 16-special
-            Cartridge cartridge = new Cartridge("../../roms/castlevania.nes");
+            Cartridge cartridge = new Cartridge("../../roms/Diagnostic/apu_test/rom_singles/7-dmc_basics.nes");
             cartridge.LoadTo(nes);
 
             nes.Run(true);

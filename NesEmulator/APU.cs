@@ -10,6 +10,7 @@ namespace NesEmulator
         public Pulse pulse2;
         public Noise noise;
         public Triangle triangle;
+        public DMC dmc;
         private int cycle;
 
         private NES nes;
@@ -23,11 +24,14 @@ namespace NesEmulator
             get
             {
                 // todo: get
-                bool OldFrameInterrupt = FrameInterrupt;
+                bool OldFrameInterrupt = FrameInterrupt && !IRQInhibit;
                 FrameInterrupt = false;
+                
 
                 return (byte)(
+                    (this.dmc.Interrupt ? 0x80 : 0) |
                     (OldFrameInterrupt ? 0x40 : 0) |
+                    (this.dmc.BytesRemaining > 0 ? 0x10 : 0) |
                     (this.noise.GetLengthCounter() ? 0x08 : 0) |
                     (this.triangle.GetLengthCounter() ? 0x04 : 0) |
                     (this.pulse2.GetLengthCounter() ? 0x02 : 0) |
@@ -36,6 +40,7 @@ namespace NesEmulator
             }
             set
             {
+                this.dmc.Interrupt = false;
                 EnableDMC = (value & 0x10) > 0;
                 EnableNoise = (value & 0x08) > 0;
                 EnableTriangle = (value & 0x04) > 0;
@@ -59,6 +64,19 @@ namespace NesEmulator
                     this.triangle.SetLengthCounter(-1);
                 }
 
+                if (!EnableDMC)
+                {
+                    this.dmc.BytesRemaining = 0;
+                }
+                else
+                {
+                    if (this.dmc.BytesRemaining == 0)
+                    {
+                        this.dmc.StartSample();
+                    }
+                }
+
+                this.dmc.IRQEnable = false;
             }
         }
 
@@ -75,6 +93,11 @@ namespace NesEmulator
             {
                 Mode = (value & 0x80) > 0;
                 IRQInhibit = (value & 0x40) > 0;
+                if (IRQInhibit)
+                {
+                    FrameInterrupt = false;
+                }
+
                 /*
                 After 3 or 4 CPU clock cycles*, the timer is reset.
                 If the mode flag is set, then both "quarter frame" and "half frame" signals are also generated.
@@ -91,6 +114,7 @@ namespace NesEmulator
             this.pulse2 = new Pulse(amplitude);
             this.noise = new Noise(amplitude);
             this.triangle = new Triangle(amplitude);
+            this.dmc = new DMC(amplitude, nes);
 
             this.nes = nes;
         }
@@ -132,6 +156,11 @@ namespace NesEmulator
             {
                 Sample += this.triangle.GetSample();
             }
+            if (this.EnableDMC)
+            {
+                Sample += (short)(4 * this.dmc.GetSample());
+            }
+
             return (ushort)(Sample);
         }
 
@@ -147,6 +176,8 @@ namespace NesEmulator
              */
             this.triangle.Step();
             this.triangle.Step();
+
+            this.dmc.Step();
 
             if (Mode)
             {

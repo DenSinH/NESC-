@@ -24,8 +24,6 @@ namespace NesEmulator.Audio
 
         public Triangle(double amplitude) : base(amplitude)
         {
-            this.t = 0;
-            this.Period = 1;
             this.index = 0;
         }
 

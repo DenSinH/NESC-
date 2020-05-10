@@ -59,8 +59,6 @@ namespace NesEmulator.Audio
 
         public Pulse(double amplitude) : base(amplitude)
         {
-            this.t = 0;
-            this.Period = 1;
             this.index = 0;
             this.sequence = 0b0100_0000;  // 12.5% duty cycle by default. This is just an arbitrary choice
         }

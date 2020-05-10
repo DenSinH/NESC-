@@ -71,7 +71,7 @@ namespace NesEmulator.Audio
         private static void Play(BufferedWaveProvider bf, ShutDownEvent sd)
         {
             WaveOut wo = new WaveOut();
-            wo.DesiredLatency = 10;
+            // wo.DesiredLatency = 10;
             wo.NumberOfBuffers = 50;
             wo.Init(bf);
             wo.Play();

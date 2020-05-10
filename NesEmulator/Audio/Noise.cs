@@ -52,8 +52,6 @@ namespace NesEmulator.Audio
 
         public Noise(double amplitude) : base(amplitude)
         {
-            this.t = 0;
-            this.Period = 1;
             this.ShiftRegister = 1;
         }
 

@@ -155,6 +155,19 @@ namespace NesEmulator
                             this.nes.apu.noise.NOISE400F = value;
                             return;
 
+                        case 0x4010:
+                            this.nes.apu.dmc.FLAGS = value;
+                            return;
+                        case 0x4011:
+                            this.nes.apu.dmc.DIRECTLOAD = value;
+                            return;
+                        case 0x4012:
+                            this.nes.apu.dmc.SAMPLEADDRESS = value;
+                            return;
+                        case 0x4013:
+                            this.nes.apu.dmc.SAMPLELENGTH = value;
+                            return;
+
                         case 0x4014:
                             this.nes.DMAActive = true;
                             this.nes.DMAAddr = 0;

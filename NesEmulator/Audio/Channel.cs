@@ -25,6 +25,8 @@ namespace NesEmulator.Audio
         public Channel(double amplitude)
         {
             this.amplitude = amplitude;
+            this.t = 1;
+            this.Period = 1;
         }
 
         public void Step()
