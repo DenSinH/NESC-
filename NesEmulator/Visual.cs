@@ -22,6 +22,10 @@ namespace NesEmulator
         private NES nes;
         private Thread PlayThread;
 
+        private readonly VideoDebug Debug = new VideoDebug();
+        private bool DebugEnabled;
+        private bool OddFrame;
+
         public Visual(NES nes)
         {
             InitializeComponent();
@@ -49,19 +53,21 @@ namespace NesEmulator
             timer.Start();
 
             MenuStrip ms = new MenuStrip();
-            ToolStripMenuItem windowMenu = new ToolStripMenuItem("Game");
-            ToolStripMenuItem windowNewMenu = new ToolStripMenuItem("Open", null, new EventHandler(LoadGame));
+            ToolStripMenuItem GameMenu = new ToolStripMenuItem("Game");
+            ToolStripMenuItem GameOpenItem = new ToolStripMenuItem("Open", null, new EventHandler(LoadGame));
+            ToolStripMenuItem GameDebugItem = new ToolStripMenuItem("Debug", null, new EventHandler(OpenDebug));
 
-            windowMenu.DropDownItems.Add(windowNewMenu);
-            ((ToolStripDropDownMenu)(windowMenu.DropDown)).ShowImageMargin = false;
-            ((ToolStripDropDownMenu)(windowMenu.DropDown)).ShowCheckMargin = false;
+            GameMenu.DropDownItems.Add(GameOpenItem);
+            GameMenu.DropDownItems.Add(GameDebugItem);
+            ((ToolStripDropDownMenu)(GameMenu.DropDown)).ShowImageMargin = false;
+            ((ToolStripDropDownMenu)(GameMenu.DropDown)).ShowCheckMargin = false;
 
             // Assign the ToolStripMenuItem that displays 
             // the list of child forms.
-            ms.MdiWindowListItem = windowMenu;
+            ms.MdiWindowListItem = GameMenu;
 
             // Add the window ToolStripMenuItem to the MenuStrip.
-            ms.Items.Add(windowMenu);
+            ms.Items.Add(GameMenu);
 
             // Dock the MenuStrip to the top of the form.
             ms.Dock = DockStyle.Top;
@@ -83,6 +89,7 @@ namespace NesEmulator
         {
             this.nes.speaker.ShutDown();
             this.nes.ShutDown = true;
+            this.Debug?.Close();
             base.OnFormClosing(e);
         }
 
@@ -150,6 +157,14 @@ namespace NesEmulator
         private void Tick(object sender, EventArgs e)
         {
             Draw();
+            if (DebugEnabled)
+            {
+                if (OddFrame)
+                {
+                    this.Debug.UpdateVisual(this.nes.ppu);
+                }
+                OddFrame ^= true;
+            }
         }
 
         private void LoadGame(object sender, EventArgs e)
@@ -174,6 +189,12 @@ namespace NesEmulator
                     this.PlayThread.Start();
                 }
             }
+        }
+
+        private void OpenDebug(object sender, EventArgs e)
+        {
+            Debug.Show();
+            DebugEnabled = true;
         }
 
         private void Play(string filename)

@@ -154,7 +154,7 @@ namespace NesEmulator
             if ((x >= 0) && (x < 0x100) && (y >= 0) && (y < 0xf0))
             {
                 // lock display?
-                this.nes.display[0x100 * y + x] = this.palette[
+                this.nes.display[0x100 * y + x] = PPU.palette[
                     this[0x3f00 | (BGSpriteSelect << 4) | (PaletteStart << 2) | PaletteInternal] & 0x3f
                 ];
             }

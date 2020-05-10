@@ -96,6 +96,12 @@
     <Compile Include="PPU.Registers.cs" />
     <Compile Include="PPU.Render.cs" />
     <Compile Include="Audio\Speaker.cs" />
+    <Compile Include="VideoDebug.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VideoDebug.Designer.cs">
+      <DependentUpon>VideoDebug.cs</DependentUpon>
+    </Compile>
     <Compile Include="Visual.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -104,6 +110,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="VideoDebug.resx">
+      <DependentUpon>VideoDebug.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Visual.resx">
       <DependentUpon>Visual.cs</DependentUpon>
     </EmbeddedResource>
