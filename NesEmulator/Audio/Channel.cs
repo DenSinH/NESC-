@@ -22,6 +22,11 @@ namespace NesEmulator.Audio
         
         protected double amplitude;
 
+        public void SetAmplitude(double amp)
+        {
+            this.amplitude = amp;
+        }
+
         public Channel(double amplitude)
         {
             this.amplitude = amplitude;

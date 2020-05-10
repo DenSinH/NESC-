@@ -32,7 +32,7 @@ namespace NesEmulator
             byte _A, _B, _Start, _Select, _Up, _Down, _Left, _Right;
 
             _A = (byte)(((state & (int)GamepadButtonFlags.A) > 0) ? 0b1000_0000 : 0);
-            _B = (byte)(((state & (int)GamepadButtonFlags.B) > 0) ? 0b0100_0000 : 0);
+            _B = (byte)(((state & ((int)GamepadButtonFlags.B | (int)GamepadButtonFlags.X)) > 0) ? 0b0100_0000 : 0);
             _Start = (byte)(((state & (int)GamepadButtonFlags.Start) > 0) ? 0b0010_0000 : 0);
             _Select = (byte)(((state & (int)GamepadButtonFlags.Back) > 0) ? 0b0001_0000 : 0);
             _Up = (byte)(((state & (int)GamepadButtonFlags.DPadUp) > 0) ? 0b0000_1000 : 0);

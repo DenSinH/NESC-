@@ -5,7 +5,7 @@ namespace NesEmulator
 {
     public class APU
     {
-        const double amplitude = 0.05;
+        private double amplitude = 0.05;
         public Pulse pulse1;
         public Pulse pulse2;
         public Noise noise;
@@ -117,6 +117,49 @@ namespace NesEmulator
             this.dmc = new DMC(amplitude, nes);
 
             this.nes = nes;
+        }
+
+        public void ChangeAmplitude(double dAmp)
+        {
+            this.amplitude += dAmp;
+            if (this.amplitude < 0)
+            {
+                this.amplitude = 0;
+            }
+
+            this.SetAmplitude(this.amplitude);
+        }
+
+        public void SetAmplitude(double amp)
+        {
+            this.amplitude = amp;
+            this.pulse1.SetAmplitude(amp);
+            this.pulse2.SetAmplitude(amp);
+            this.noise.SetAmplitude(amp);
+            this.triangle.SetAmplitude(amp);
+            this.dmc.SetAmplitude(amp);
+        }
+
+        public void POWERUP()
+        {
+            this.pulse1.PULSE4000 = 0;
+            this.pulse1.PULSESWEEP = 0;
+            this.pulse1.PULSE4003 = 0;
+            this.pulse2.PULSE4000 = 0;
+            this.pulse2.PULSESWEEP = 0;
+            this.pulse2.PULSE4003 = 0;
+
+            this.noise.NOISE400C = 0;
+            this.noise.MODE_PERIOD = 0;
+            this.noise.NOISE400F = 0;
+
+            this.triangle.TRIANGLE4008 = 0;
+            this.triangle.TRIANGLE400B = 0;
+
+            this.dmc.DIRECTLOAD = 0;
+            this.dmc.FLAGS = 0;
+            this.dmc.SAMPLEADDRESS = 0;
+            this.dmc.SAMPLELENGTH = 0;
         }
 
         private void QuarterFrame()

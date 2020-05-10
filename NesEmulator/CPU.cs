@@ -160,6 +160,15 @@ namespace NesEmulator
             this.Mapper = m;
         }
 
+        public void POWERUP()
+        {
+            this.sr = 0x34;
+            this.ac = 0;
+            this.x = 0;
+            this.y = 0;
+            this.sp = 0;
+        }
+
         public string GenLog()
         {
             int opcode = this.getCurrent();

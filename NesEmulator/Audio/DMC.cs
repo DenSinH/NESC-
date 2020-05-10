@@ -9,6 +9,11 @@ namespace NesEmulator.Audio
     public class DMC
     {
         private double amplitude;
+        public void SetAmplitude(double amp)
+        {
+            this.amplitude = amp;
+        }
+
         private NES nes;
 
         private bool SampleBufferFilled;

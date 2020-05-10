@@ -10,10 +10,10 @@ namespace NesEmulator
         public static void Run(NES nes)
         {      
             // fails brk: brk, 16-special
-            Cartridge cartridge = new Cartridge("../../roms/Diagnostic/apu_test/rom_singles/7-dmc_basics.nes");
+            Cartridge cartridge = new Cartridge("../../roms/zelda.nes");
             cartridge.LoadTo(nes);
 
-            nes.Run(true);
+            nes.Run(false);
 
         }
 
@@ -23,14 +23,10 @@ namespace NesEmulator
             int[] rawBitmap = new int[0x100 * 0xf0 * 3];
             NES nes = new NES(rawBitmap);
 
-            Thread t = new Thread(() => Run(nes));
-            t.SetApartmentState(ApartmentState.STA);
-
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Visual vis = new Visual(nes);
 
-            t.Start();
             Application.Run(vis);
         }
     }

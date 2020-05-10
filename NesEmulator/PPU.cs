@@ -28,6 +28,17 @@ namespace NesEmulator
         {
             this.Mapper = m;
         }
+
+        public void POWERUP()
+        {
+            // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
+            this.PPUCTRL = 0;
+            this.PPUMASK = 0;
+            this.w = 0;
+            this.PPUSCROLL = 0;
+            this.PPUDATA = 0;
+            this.OddFrame = false;
+        }
         
         /*
         ====================
