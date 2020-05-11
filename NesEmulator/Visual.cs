@@ -161,7 +161,7 @@ namespace NesEmulator
             {
                 if (OddFrame)
                 {
-                    this.Debug.UpdateVisual(this.nes.ppu);
+                    this.Debug.UpdateVisual(this.nes);
                 }
                 OddFrame ^= true;
             }

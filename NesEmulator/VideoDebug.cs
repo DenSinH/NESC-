@@ -59,9 +59,6 @@ namespace NesEmulator
                 this.PalettesRaw[i] = new int[4];
                 this.Palettes[i] = new Bitmap(128, 32);
             }
-
-            this.OAMText.Font = new Font(FontFamily.GenericMonospace, 16);
-            this.OAMText.ScrollBars = ScrollBars.Vertical;
         }
 
         private void Palette0_Click(object sender, EventArgs e)
@@ -104,13 +101,13 @@ namespace NesEmulator
             PaletteSelected = 7;
         }
 
-        public void UpdateVisual(PPU ppu)
+        public void UpdateVisual(NES nes)
         {
-            if (ppu == null)
+            if (nes.ppu == null)
             {
                 return;
             }
-            else if (ppu.Mapper == null)
+            else if (nes.ppu.Mapper == null)
             {
                 return;
             }
@@ -121,16 +118,17 @@ namespace NesEmulator
             bool changed;
             for (i = 0; i < 2; i++)
             {
+                // Check if updating spritetable is necessary
                 changed = false;
                 for (int SampleY = 0; SampleY < 0x10; SampleY++)
                 {
                     for (int SampleX = 0; SampleX < 0x10; SampleX++)
                     {
-                        lower = (byte)(ppu[(i * 0x1000) + (SampleY * 0x100) + (SampleX * 0x10) + 4] >> 4);
-                        upper = (byte)(ppu[(i * 0x1000) + (SampleY * 0x100) + (SampleX * 0x10) + 4 + 8] >> 4);
+                        lower = (byte)(nes.ppu[(i * 0x1000) + (SampleY * 0x100) + (SampleX * 0x10) + 4] >> 4);
+                        upper = (byte)(nes.ppu[(i * 0x1000) + (SampleY * 0x100) + (SampleX * 0x10) + 4 + 8] >> 4);
 
                         if (this.PatternTablesRaw[i][(8 * SampleX + 3) + 128 * (8 * SampleY + 4)] !=
-                            PPU.palette[ppu[0x3f00 | (PaletteSelected << 2) | 2 * (upper & 0x01) | (lower & 0x01)] & 0x3f])
+                            PPU.palette[nes.ppu[0x3f00 | (PaletteSelected << 2) | 2 * (upper & 0x01) | (lower & 0x01)] & 0x3f])
                         {
                             changed = true;
                             break;
@@ -148,13 +146,13 @@ namespace NesEmulator
                     {
                         for (int row = 0; row < 8; row++)
                         {
-                            lower = ppu[(i * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row];
-                            upper = ppu[(i * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row + 8];
+                            lower = nes.ppu[(i * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row];
+                            upper = nes.ppu[(i * 0x1000) + (SpriteTableTileY * 0x100) + (SpriteTableTileX * 0x10) + row + 8];
 
                             for (byte bit = 0; bit < 8; bit++)
                             {
                                 this.PatternTablesRaw[i][(8 * SpriteTableTileX + (7 - bit)) + 128 * (8 * SpriteTableTileY + row)] = 
-                                    PPU.palette[ppu[0x3f00 | (PaletteSelected << 2) |  2 * (upper & 0x01) | (lower & 0x01)] & 0x3f];
+                                    PPU.palette[nes.ppu[0x3f00 | (PaletteSelected << 2) |  2 * (upper & 0x01) | (lower & 0x01)] & 0x3f];
 
                                 upper >>= 1;
                                 lower >>= 1;
@@ -190,9 +188,9 @@ namespace NesEmulator
                 changed = false;
                 for (j = 0; j < 4; j++)
                 {
-                    if (this.PalettesRaw[i][j] != PPU.palette[ppu[0x3f00 | (i << 2) | j] & 0x3f])
+                    if (this.PalettesRaw[i][j] != PPU.palette[nes.ppu[0x3f00 | (i << 2) | j] & 0x3f])
                     {
-                        this.PalettesRaw[i][j] = PPU.palette[ppu[0x3f00 | (i << 2) | j] & 0x3f];
+                        this.PalettesRaw[i][j] = PPU.palette[nes.ppu[0x3f00 | (i << 2) | j] & 0x3f];
                         changed = true;
                     }
                 }
@@ -214,9 +212,28 @@ namespace NesEmulator
             for (i = 0; i < 64; i++)
             {
                 sb.AppendLine(string.Format("{0:d2}: Y:{1:x2} T:{2:x2} A:{3:x2} X:{4:x2}",
-                    i, ppu.oam[4 * i], ppu.oam[4 * i + 1], ppu.oam[4 * i + 2], ppu.oam[4 * i + 3]));
+                    i, nes.ppu.oam[4 * i], nes.ppu.oam[4 * i + 1], nes.ppu.oam[4 * i + 2], nes.ppu.oam[4 * i + 3]));
             }
             this.OAMText.Text = sb.ToString();
+
+            // Update CPU values
+            this.AContent.Text = nes.cpu.ac.ToString("X2");
+            this.XContent.Text = nes.cpu.x.ToString("X2");
+            this.YContent.Text = nes.cpu.y.ToString("X2");
+            this.PCContent.Text = nes.cpu.getPc().ToString("X4");
+
+            this.NFlag.ForeColor = nes.cpu.getFlag('N') == 1 ? Color.Green : Color.Red;
+            this.VFlag.ForeColor = nes.cpu.getFlag('V') == 1 ? Color.Green : Color.Red;
+            this.BFlag.ForeColor = nes.cpu.getFlag('B') == 1 ? Color.Green : Color.Red;
+            this.IFlag.ForeColor = nes.cpu.getFlag('I') == 1 ? Color.Green : Color.Red;
+            this.ZFlag.ForeColor = nes.cpu.getFlag('Z') == 1 ? Color.Green : Color.Red;
+            this.CFlag.ForeColor = nes.cpu.getFlag('C') == 1 ? Color.Green : Color.Red;
+
+        }
+
+        private void VideoDebug_Load(object sender, EventArgs e)
+        {
+
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
