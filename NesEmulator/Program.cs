@@ -7,16 +7,6 @@ namespace NesEmulator
 
     class Program
     {
-        public static void Run(NES nes)
-        {      
-            // fails brk: brk, 16-special
-            Cartridge cartridge = new Cartridge("../../roms/zelda.nes");
-            cartridge.LoadTo(nes);
-
-            nes.Run(false);
-
-        }
-
         [STAThread]
         static void Main()
         {
