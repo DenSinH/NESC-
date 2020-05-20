@@ -29,7 +29,7 @@ namespace NesEmulator
         public Visual(NES nes)
         {
             InitializeComponent();
-            this.Size = new Size((int) (scale * width), (int) (scale * height + MenuStripHeight));
+            this.ClientSize = new Size((int) (scale * width), (int) (scale * height + MenuStripHeight));
 
             this.nes = nes;
             this.rawBitmap = nes.display;
@@ -124,7 +124,7 @@ namespace NesEmulator
             {
                 // no image scaling for crisp pixels!
                 e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
-                e.Graphics.DrawImage(this.Backbuffer, 0, MenuStripHeight, this.Size.Width, this.Size.Height - MenuStripHeight);
+                e.Graphics.DrawImage(this.Backbuffer, 0, MenuStripHeight, this.ClientSize.Width, this.ClientSize.Height - MenuStripHeight);
             }
         }
 

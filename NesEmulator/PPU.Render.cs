@@ -561,11 +561,11 @@ namespace NesEmulator
                     {
                         if ((SpritePixel == 0) || (SpritePriority && (BGPixel != 0)))
                         {
-                            this.SetPixel(this.cycle - 8, this.scanline - 8, 0, BGPixel > 0 ? BGPalette : 0, BGPixel);  // todo: why offset?
+                            this.SetPixel(this.cycle, this.scanline, 0, BGPixel > 0 ? BGPalette : 0, BGPixel);
                         }
                         else
                         {
-                            this.SetPixel(this.cycle - 8, this.scanline - 8, 1, SpritePixel > 0 ? SpritePalette : 0, SpritePixel);  // todo: why offset?
+                            this.SetPixel(this.cycle, this.scanline, 1, SpritePixel > 0 ? SpritePalette : 0, SpritePixel);
                         }
 
                         // Sprite0 hit detection
